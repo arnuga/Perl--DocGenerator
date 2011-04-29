@@ -16,6 +16,8 @@ use Class::MethodMaker
 
 use aliased 'Perl::DocGenerator::Item';
 
+our $VERSION = '0.01';
+
 sub new
 {
     my ($class, $package) = @_;
@@ -109,108 +111,120 @@ sub ios($self)
     return @ios;
 }
 
+1;
+
+__END__
+
 =head1 NAME
 
-Perl::DocGenerator::ModuleProcessor - The great new Perl::DocGenerator::ModuleProcessor!
+<Module::Name> - <One-line description of module's purpose>
+
 
 =head1 VERSION
 
-Version 0.01
-
-=cut
-
-our $VERSION = '0.01';
+This documentation refers to <Module::Name> version 0.0.1.
 
 
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
+    use <Module::Name>;
+    # Brief but working code example(s) here showing the most common usage(s).
 
-Perhaps a little code snippet.
+    # This section will be as far as many users bother reading,
+    # so make it as educational and exemplary as possible.
 
-    use Perl::DocGenerator::ModuleProcessor;
 
-    my $foo = Perl::DocGenerator::ModuleProcessor->new();
-    ...
+=head1 DESCRIPTION
 
-=head1 EXPORT
+A full description of the module and its features.
+May include numerous subsections (i.e., =head2, =head3, etc.).
 
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
 
 =head1 SUBROUTINES/METHODS
 
-=head2 function1
+=head2 new
 
-=cut
+=head2 base_classes
 
-sub function1 {
-}
+=head2 packages
 
-=head2 function2
+=head2 scalars
 
-=cut
+=head2 functions
 
-sub function2 {
-}
+=head2 private_functions
+
+=head2 public_functions
+
+=head2 arrays
+
+=head2 hashes
+
+=head2 ios
+
+
+=head1 DIAGNOSTICS
+
+A list of every error and warning message that the module can generate
+(even the ones that will "never happen"), with a full explanation of each
+problem, one or more likely causes, and any suggested remedies.
+
+
+=head1 CONFIGURATION AND ENVIRONMENT
+
+A full explanation of any configuration system(s) used by the module,
+including the names and locations of any configuration files, and the
+meaning of any environment variables or properties that can be set. These
+descriptions must also include details of any configuration language used.
+
+
+=head1 DEPENDENCIES
+
+A list of all the other modules that this module relies upon, including any
+restrictions on versions, and an indication of whether these required modules are
+part of the standard Perl distribution, part of the module's distribution,
+or must be installed separately.
+
+
+=head1 INCOMPATIBILITIES
+
+A list of any modules that this module cannot be used in conjunction with.
+This may be due to name conflicts in the interface, or competition for
+system or program resources, or due to the internal limitations of Perl
+(for example, many modules that use source code filters are mutually incompatible).
+
+
+=head1 BUGS AND LIMITATIONS
+
+A list of known problems with the module, together with some indication of
+whether they are likely to be fixed in an upcoming release.
+
+Also a list of restrictions on the features the module does provide:
+data types that cannot be handled, performance issues and the circumstances
+in which they may arise, practical limitations on the size of data sets,
+special cases that are not (yet) handled, etc.
+(example)
+
+There are no known bugs in this module.
+Please reports problems to <Maintainer name(s)> (<contact address>)
+Patches are welcome.
+
 
 =head1 AUTHOR
 
-David Shultz, C<< <djshultz at gmail.com> >>
-
-=head1 BUGS
-
-Please report any bugs or feature requests to C<bug-perl-docgenerator at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Perl-DocGenerator>.  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
-
-
-
-
-=head1 SUPPORT
-
-You can find documentation for this module with the perldoc command.
-
-    perldoc Perl::DocGenerator::ModuleProcessor
-
-
-You can also look for information at:
-
-=over 4
-
-=item * RT: CPAN's request tracker (report bugs here)
-
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Perl-DocGenerator>
-
-=item * AnnoCPAN: Annotated CPAN documentation
-
-L<http://annocpan.org/dist/Perl-DocGenerator>
-
-=item * CPAN Ratings
-
-L<http://cpanratings.perl.org/d/Perl-DocGenerator>
-
-=item * Search CPAN
-
-L<http://search.cpan.org/dist/Perl-DocGenerator/>
-
-=back
-
-
-=head1 ACKNOWLEDGEMENTS
+<Author name(s)> (<contact address>)
 
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2011 David Shultz.
+Copyright (c) <year> <copyright holder> (<contact address>). All rights reserved.
 
-This program is free software; you can redistribute it and/or modify it
-under the terms of either: the GNU General Public License as published
-by the Free Software Foundation; or the Artistic License.
+followed by whatever license you wish to release it under.
+(for Perl code that is often just:)
 
-See http://dev.perl.org/licenses/ for more information.
+This module is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself. See L<perlartistic>.
 
-
-=cut
-
-1; # End of Perl::DocGenerator::ModuleProcessor
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PATICULAR PURPOSE.

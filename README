@@ -14,6 +14,14 @@ fixes for the module are worth downloading.
 
 INSTALLATION
 
+The following CPAN libraries are required for this module to install:
+    Devel::Symdump
+    Module::Load
+    Sub::Signatures
+    Class::MethodMaker
+    aliased
+    enum
+
 To install this module, run the following commands:
 
 	perl Build.PL
