@@ -1,0 +1,11 @@
+Build.PL
+Changes
+lib/Perl/DocGenerator.pm
+lib/Perl/DocGenerator/ModuleProcessor.pm
+lib/Perl/DocGenerator/Item.pm
+MANIFEST			This list of files
+README
+t/00-load.t
+t/manifest.t
+t/pod-coverage.t
+t/pod.t
