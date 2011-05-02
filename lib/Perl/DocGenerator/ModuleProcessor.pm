@@ -42,10 +42,11 @@ sub new
 
 sub base_classes($self)
 {
-    if ($self->arrays > 0) {
-        my ($isa_class) = grep { /ISA/ } $self->arrays;
-        if ($isa_class) {
-            my @base_classes = @$self::ISA;
+    if ($self->_arrays > 0) {
+        my ($isa_class) = grep { /ISA/ } $self->_arrays;
+        if (defined $isa_class) {
+            no strict 'refs';
+            my @base_classes = grep { ! /@{[ $self->package_name ]}/ } @{ $self->package_name . '::ISA' };
             return @base_classes;
         }
     }
@@ -71,6 +72,7 @@ sub scalars($self)
         push(@scalaronly, $item) unless (exists $seen{$item} || $item =~ /__ANON__/);
     }
 
+    # grab all methods from each base class
     @scalaronly = sort @scalaronly;
     return @scalaronly;
 }
@@ -95,7 +97,13 @@ sub public_functions($self)
 
 sub arrays($self)
 {
-    my @arrays = sort grep { $_ ne uc($_) } map { /@{[ $self->package_name ]}::(.*)/ } $self->obj->arrays;
+    my @arrays = sort grep { $_ ne uc($_) } $self->_arrays;
+    return @arrays;
+}
+
+sub _arrays($self)
+{
+    my @arrays = sort map { /@{[ $self->package_name ]}::(.*)/ } $self->obj->arrays;
     return @arrays;
 }
 

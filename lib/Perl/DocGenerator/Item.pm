@@ -9,10 +9,12 @@ use enum qw/
 
 use Class::MethodMaker
     [
-        scalar => [{ -type => 'enum' }, 'object_type' ],
-        scalar => [qw/name full_name package original_package base_classes/],
+        scalar => [{ -type =>           'enum' }, 'object_type' ],
+        scalar => [{ -type => 'Devel::Symdump' },         'obj' ],
+        scalar => [ qw/name full_name package original_package/ ],
+        array  => [ qw/base_classes/ ],
         new    => 'new',
-        new    => [qw/ -hash new_hash_init /],
+        new    => [ qw/-hash new_hash_init/ ],
     ];
 
 1;
