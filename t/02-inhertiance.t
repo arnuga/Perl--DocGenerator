@@ -29,14 +29,14 @@ use Perl::DocGenerator::ModuleProcessor;
     my $num_scalars = scalar @scalars;
 
     cmp_ok($num_scalars, '==', 2);
-    cmp_ok($scalars[0], 'eq', 'other_global_thing');
-    cmp_ok($scalars[1], 'eq', 'global_thing');
+    cmp_ok($scalars[0], 'eq', 'global_thing');
+    cmp_ok($scalars[1], 'eq', 'other_global_thing');
 
     my @functions = $module->functions;
 
     my $num_functions = scalar @functions;
     cmp_ok($num_functions, '==', 3);
     cmp_ok($functions[0], 'eq', 'ahha');
-    cmp_ok($functions[2], 'eq', 'new');
-    cmp_ok($functions[1], 'eq', 'order_drink');
+    cmp_ok($functions[1], 'eq', 'new');
+    cmp_ok($functions[2], 'eq', 'order_drink');
 }

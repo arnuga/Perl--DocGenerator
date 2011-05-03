@@ -8,7 +8,10 @@ README
 ignore.txt
 t/00-load.t
 t/01-basics.t
+t/02-inhertiance.t
 t/manifest.t
 t/pod-coverage.t
 t/pod.t
 t/lib/Bar.pm
+t/lib/Baz.pm
+t/lib/Bah.pm
