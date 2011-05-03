@@ -2,16 +2,19 @@ package Perl::DocGenerator::Item;
 
 use strict;
 
-use Sub::Signatures;
 use enum qw/
-    :T_=0 SCALAR ARRAY HASH FUNCTION IOS PACKAGE
+    :T_=0 SCALAR ARRAY HASH FUNCTION IOS PACKAGE BASE_CLASS
 /;
+
+require Exporter;
+use vars qw/@ISA @EXPORT/;
+@ISA = qw/Exporter/;
+@EXPORT = qw/T_SCALAR T_ARRAY T_HASH T_FUNCTION T_IOS T_PACKAGE T_BASE_CLASS/;
 
 use Class::MethodMaker
     [
-        scalar => [{ -type =>           'enum' }, 'object_type' ],
         scalar => [{ -type => 'Devel::Symdump' },         'obj' ],
-        scalar => [ qw/name full_name package original_package/ ],
+        scalar => [ qw/object_type name full_name package original_package/ ],
         array  => [ qw/base_classes/ ],
         new    => 'new',
         new    => [ qw/-hash new_hash_init/ ],

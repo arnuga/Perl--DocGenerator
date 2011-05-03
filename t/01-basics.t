@@ -18,9 +18,9 @@ cmp_ok($module->package_name, 'eq', 'Bar');
 cmp_ok($module->scalars, '==', 1);
 
 my ($scalar) = $module->scalars;
-cmp_ok($scalar, 'eq', 'global_thing');
+cmp_ok($scalar->name, 'eq', 'global_thing');
 
 cmp_ok($module->functions, '==', 1);
 
 my ($func) = $module->functions;
-cmp_ok($func, 'eq', 'new');
+cmp_ok($func->name, 'eq', 'new');

@@ -13,7 +13,8 @@ use Class::MethodMaker
         hash   => [qw/-static cached_modules/],
     ];
 
-#use aliased 'Perl::DocGenerator::Item';
+use Perl::DocGenerator::Item;
+use aliased 'Perl::DocGenerator::Item';
 
 our $VERSION = '0.01';
 
@@ -25,17 +26,11 @@ sub new
 
     $self->package_name($package);
 
-#    if (!__PACKAGE__->cached_modules_exists($package)) {
-        eval { load($package) };
-        if (my $err = $@) {
-            die "Unable to load package '$package': $err";
-        }
-        $self->obj(Devel::Symdump->new($package));
-#        __PACKAGE__->cached_modules_set($package, $self->obj);
-#    } else {
-#        my ($package_name, $obj) = __PACKAGE__->cached_modules_get($package);
-#        $self->obj($obj);
-#    }
+    eval { load($package) };
+    if (my $err = $@) {
+        die "Unable to load package '$package': $err";
+    }
+    $self->obj(Devel::Symdump->new($package));
 
     return $self;
 }
@@ -43,21 +38,40 @@ sub new
 sub base_classes
 {
     my ($self) = @_;
+    my @return_base_classes = ();
     if ($self->_arrays > 0) {
-        my ($isa_class) = grep { /ISA/ } $self->_arrays;
+        my ($isa_class) = grep { $_->name =~ /ISA/ } $self->_arrays;
         if (defined $isa_class) {
             no strict 'refs';
             my @base_classes = grep { ! /@{[ $self->package_name ]}/ } @{ $self->package_name . '::ISA' };
-            return @base_classes;
+            foreach my $base_item (@base_classes) {
+                my $item_obj = Item->new;
+                $item_obj->object_type(T_BASE_CLASS);
+                $item_obj->name($base_item);
+                $item_obj->package($base_item);
+                $item_obj->original_package($base_item);
+                $item_obj->full_name($base_item);
+                push(@return_base_classes, $item_obj);
+            }
         }
     }
-    return ();
+    return @return_base_classes;
 }
 
 sub packages
 {
     my ($self) = @_;
-    return $self->obj->packages;
+    my @return_packages = ();
+    foreach my $package ($self->packages) {
+        my $item_obj = Item->new;
+        $item_obj->object_type(T_PACKAGE);
+        $item_obj->name($package);
+        $item_obj->package($package);
+        $item_obj->original_package($package);
+        $item_obj->full_name($package);
+        push(@return_packages, $item_obj);
+    }
+    return @return_packages;
 }
 
 sub scalars
@@ -69,112 +83,149 @@ sub scalars
     my %seen;
     my @scalaronly;
 
-    @seen{@functions} = ();
+    @seen{map { $_->name } @functions} = ();
 
     foreach my $item (@scalars) {
-        push(@scalaronly, $item) unless (exists $seen{$item} || $item =~ /__ANON__/);
+        next if (exists $seen{$item} || $item =~ /__ANON__/);
+        my $item_obj = Item->new;
+        $item_obj->object_type(T_SCALAR);
+        $item_obj->name($item);
+        $item_obj->package($self->package_name);
+        $item_obj->original_package($self->package_name);
+        $item_obj->full_name(join('::', $self->package_name, $item));
+        push(@scalaronly, $item_obj);
     }
 
     foreach my $base_class ($self->base_classes) {
-        my @base_items = $self->_module_for_package($base_class)->scalars();
+        my @base_items = $self->_module_for_package($base_class->name)->scalars();
         @base_items = $self->_unique_items_from_first_list(\@base_items, \@scalaronly);
-        push @scalaronly, @base_items;
+        push(@scalaronly, @base_items);
     }
 
-    @scalaronly = sort @scalaronly;
     return @scalaronly;
 }
 
 sub functions
 {
     my ($self) = @_;
+    my @return_functions = ();
     my @functions = grep { $_ ne uc($_) } map { /@{[ $self->package_name ]}::(.*)/ } $self->obj->functions;
 
-    foreach my $base_class ($self->base_classes) {
-        my @base_items = $self->_module_for_package($base_class)->functions();
-        @base_items = $self->_unique_items_from_first_list(\@base_items, \@functions);
-        push @functions, @base_items;
+    foreach my $function (@functions) {
+        my $item_obj = Item->new;
+        $item_obj->object_type(T_FUNCTION);
+        $item_obj->name($function);
+        $item_obj->package($self->package_name);
+        $item_obj->original_package($self->package_name);
+        $item_obj->full_name(join('::', $self->package_name, $function));
+        push(@return_functions, $item_obj);
     }
 
-    @functions = sort @functions;
-    return @functions;
+        foreach my $base_class ($self->base_classes) {
+        my @base_items = $self->_module_for_package($base_class->name)->functions();
+        @base_items = $self->_unique_items_from_first_list(\@base_items, \@return_functions);
+        push(@return_functions, @base_items);
+    }
+
+    return @return_functions;
 }
 
 sub private_functions
 {
     my ($self) = @_;
-    my @private_funcs = grep { /^_/ } $self->functions;
-    foreach my $base_module ($self->base_classes) {
-        push @private_funcs, $self->_module_for_package($base_module)->private_funcs;
-    }
+    my @private_funcs = grep { $_->name =~ /^_/ } $self->functions;
 
-    @private_funcs = sort @private_funcs;
     return @private_funcs;
 }
 
 sub public_functions
 {
     my ($self) = @_;
-    my @public_funcs = grep { /^[^_]/ } $self->functions;
+    my @public_funcs = grep { $_->name =~ /^[^_]/ } $self->functions;
 
-    foreach my $base_module ($self->public_functions) {
-        push @public_funcs, $self->_module_for_package($base_module)->public_functions;
-    }
-
-    @public_funcs = sort @public_funcs;
     return @public_funcs;
 }
 
 sub arrays
 {
     my ($self) = @_;
-    my @arrays = grep { $_ ne uc($_) } $self->_arrays;
+    my @return_arrays = $self->_arrays;
 
     foreach my $base_class ($self->base_classes) {
-        my @base_items = $self->_module_for_package($base_class)->arrays();
-        @base_items = $self->_unique_items_from_first_list(\@base_items, \@arrays);
-        push @arrays, @base_items;
+        my @base_items = $self->_module_for_package($base_class->name)->arrays();
+        @base_items = $self->_unique_items_from_first_list(\@base_items, $self->_arrays);
+        push(@return_arrays, @base_items);
     }
 
-    @arrays = sort @arrays;
-    return @arrays;
+    return @return_arrays;
 }
 
 sub _arrays
 {
     my ($self) = @_;
+    my @return_arrays;
     my @arrays = map { /@{[ $self->package_name ]}::(.*)/ } $self->obj->arrays;
-    return @arrays;
+    foreach my $array (@arrays) {
+        my $item_obj = Item->new;
+        $item_obj->object_type(T_ARRAY);
+        $item_obj->name($array);
+        $item_obj->package($self->package_name);
+        $item_obj->original_package($self->package_name);
+        $item_obj->full_name(join('::', $self->package_name, $array));
+        push(@return_arrays, $item_obj);
+    }
+
+    return @return_arrays;
 }
 
 sub hashes
 {
     my ($self) = @_;
+    my @return_hashes;
     my @hashes = grep { $_ ne uc($_) } map { /@{[ $self->package_name ]}::(.*)/ } $self->obj->hashes;
 
-    foreach my $base_class ($self->base_classes) {
-        my @base_items = $self->_module_for_package($base_class)->hashes();
-        @base_items = $self->_unique_items_from_first_list(\@base_items, \@hashes);
-        push @hashes, @base_items;
+    foreach my $hash (@hashes) {
+        my $item_obj = Item->new;
+        $item_obj->object_type(T_HASH);
+        $item_obj->name($hash);
+        $item_obj->package_name($self->package_name);
+        $item_obj->original_package($self->package_name);
+        $item_obj->full_name(join('::', $self->package_name, $hash));
+        push(@return_hashes, $item_obj);
     }
 
-    @hashes = sort @hashes;
-    return @hashes;
+        foreach my $base_class ($self->base_classes) {
+        my @base_items = $self->_module_for_package($base_class->name)->hashes();
+        @base_items = $self->_unique_items_from_first_list(\@base_items, \@return_hashes);
+        push(@return_hashes, @base_items);
+    }
+
+    return @return_hashes;
 }
 
 sub ios
 {
     my ($self) = @_;
+    my @return_ios;
     my @ios = grep { $_ ne uc($_) } map { /@{[ $self->package_name ]}::(.*)/ } $self->obj->ios;
 
-    foreach my $base_class ($self->base_classes) {
-        my @base_items = $self->_module_for_package($base_class)->ios();
-        @base_items = $self->_unique_items_from_first_list(\@base_items, \@ios);
-        push @ios, @base_items;
+    foreach my $ios (@ios) {
+        my $item_obj = Item->new;
+        $item_obj->object_type(T_IOS);
+        $item_obj->name($ios);
+        $item_obj->package($self->package_name);
+        $item_obj->original_package($self->package_name);
+        $item_obj->full_name(join('::', $self->package_name, $ios));
+        push(@return_ios, $item_obj);
     }
 
-    @ios = sort @ios;
-    return @ios;
+        foreach my $base_class ($self->base_classes) {
+        my @base_items = $self->_module_for_package($base_class->name)->ios();
+        @base_items = $self->_unique_items_from_first_list(\@base_items, \@return_ios);
+        push(@return_ios, @base_items);
+    }
+
+    return @return_ios;
 }
 
 sub _module_for_package
@@ -188,24 +239,11 @@ sub _unique_items_from_first_list
     my ($self, $arrayA, $arrayB) = @_;
     my %seen;
     my @aonly = ();
-    @seen{@$arrayB} = ();
+    @seen{map { $_->name } @$arrayB} = ();
 
-    map { push(@aonly, $_) unless exists $seen{$_} } @$arrayA;
+    map { push(@aonly, $_) unless exists $seen{$_->name} } @$arrayA;
 
     return @aonly;
-}
-
-sub _add_base_class_unique_items_to_list
-{
-    my ($self, $accessor, @items) = @_;
-
-    foreach my $base_class ($self->base_classes) {
-        my @base_items = $self->_module_for_package($base_class)->$accessor();
-        @base_items = $self->_unique_items_from_first_list(\@base_items, \@items);
-        push @items, @base_items;
-    }
-
-    return @items;
 }
 
 1;
