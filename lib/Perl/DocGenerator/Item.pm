@@ -6,19 +6,22 @@ use enum qw/
     :T_=0 SCALAR ARRAY HASH FUNCTION IOS PACKAGE BASE_CLASS
 /;
 
+require Class::Accessor;
 require Exporter;
 use vars qw/@ISA @EXPORT/;
-@ISA = qw/Exporter/;
+@ISA = qw/Exporter Class::Accessor/;
 @EXPORT = qw/T_SCALAR T_ARRAY T_HASH T_FUNCTION T_IOS T_PACKAGE T_BASE_CLASS/;
 
-use Class::MethodMaker
-    [
-        scalar => [{ -type => 'Devel::Symdump' },         'obj' ],
-        scalar => [ qw/object_type name full_name package original_package/ ],
-        array  => [ qw/base_classes/ ],
-        new    => 'new',
-        new    => [ qw/-hash new_hash_init/ ],
-    ];
+__PACKAGE__->mk_accessors(qw/
+    obj object_type name full_name package original_package base_classes
+/);
+
+sub set
+{
+    my ($self, $key) = splice(@_, 0, 2);
+    $self->SUPER::set($key, @_);
+    return $self;
+}
 
 1;
 
