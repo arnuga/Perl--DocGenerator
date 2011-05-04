@@ -297,6 +297,7 @@ May include numerous subsections (i.e., =head2, =head3, etc.).
 
 =head2 ios
 
+=head2 set
 
 =head1 DIAGNOSTICS
 

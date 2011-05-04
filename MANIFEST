@@ -3,12 +3,19 @@ Changes
 lib/Perl/DocGenerator.pm
 lib/Perl/DocGenerator/ModuleProcessor.pm
 lib/Perl/DocGenerator/Item.pm
+lib/Perl/DocGenerator/WriterBase.pm
+lib/Perl/DocGenerator/Writer/HTML.pm
+lib/Perl/DocGenerator/Writer/PDF.pm
+lib/Perl/DocGenerator/Writer/Pod.pm
+lib/Perl/DocGenerator/Writer/Screen.pm
+lib/Perl/DocGenerator/Writer/XML.pm
 MANIFEST			This list of files
 README
 ignore.txt
 t/00-load.t
 t/01-basics.t
 t/02-inhertiance.t
+t/03-writerbase.t
 t/manifest.t
 t/pod-coverage.t
 t/pod.t

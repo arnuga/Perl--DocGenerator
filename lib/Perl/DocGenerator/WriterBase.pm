@@ -1,31 +1,37 @@
-package Perl::DocGenerator::Item;
+package Perl::DocGenerator::WriterBase;
 
 use strict;
 
-use enum qw/
-    :T_=0 SCALAR ARRAY HASH FUNCTION IOS PACKAGE BASE_CLASS
-/;
-
-require Class::Accessor;
-require Exporter;
-use vars qw/@ISA @EXPORT/;
-@ISA = qw/Exporter Class::Accessor/;
-@EXPORT = qw/T_SCALAR T_ARRAY T_HASH T_FUNCTION T_IOS T_PACKAGE T_BASE_CLASS/;
+use Module::Load;
+use base qw/Class::Accessor/;
 
 __PACKAGE__->mk_accessors(qw/
-    obj object_type name full_name package original_package base_classes
+    recurse
+    writer
 /);
 
-sub set
+sub _load_and_verify_writer
 {
-    my ($self, $key) = splice(@_, 0, 2);
-    $self->SUPER::set($key, @_);
-    return $self;
+    my ($self) = @_;
+
+    if ($self->writer) {
+        eval { load($self->writer) };
+        if (my $err = $@) {
+            die "Ah, can't load writer class @{[ $self->writer ]}: $err";
+        }
+
+        eval {
+            my $writer_obj = $self->writer->new;
+            die "Your writer class sux!" unless ($writer_obj->can('write'));
+        };
+    } else {
+        die "No writer class was provided";
+    }
+    return 1;
 }
 
 1;
 
-__END__
 
 =head1 NAME
 
@@ -54,7 +60,7 @@ May include numerous subsections (i.e., =head2, =head3, etc.).
 
 =head1 SUBROUTINES/METHODS
 
-=head2 set
+=head2 _load_and_verify_writer
 
 =head1 DIAGNOSTICS
 
