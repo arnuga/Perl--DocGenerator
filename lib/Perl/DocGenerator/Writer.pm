@@ -1,4 +1,4 @@
-package Perl::DocGenerator::WriterBase;
+package Perl::DocGenerator::Writer;
 
 use strict;
 
@@ -7,22 +7,64 @@ use base qw/Class::Accessor/;
 
 __PACKAGE__->mk_accessors(qw/
     recurse
-    writer
+    writer_class
+    writer_obj
 /);
+
+sub initialize_writer
+{
+    my ($self) = @_;
+    $self->writer_class || $self->writer_class('Perl::DocGenerator::Writer::Screen');
+    return $self->_load_and_verify_writer();
+}
+
+sub write_package
+{
+    my ($self, $package_obj) = splice(@_, 0, 2);
+    if ($self->writer_obj->can('before_package')) {
+        $self->writer_obj->before_package();
+    }
+    $self->writer_obj->write_package_description($package_obj);
+    $self->writer_obj->write_scalars($package_obj);
+    $self->writer_obj->write_arrays($package_obj);
+    $self->writer_obj->write_hashes($package_obj);
+    $self->writer_obj->write_ios($package_obj);
+    $self->writer_obj->write_public_functions($package_obj);
+    $self->writer_obj->write_private_functions($package_obj);
+    $self->writer_obj->write_extra_imbedded_pod($package_obj);
+
+    if ($self->writer_obj->can('after_package')) {
+        $self->writer_obj->after_package();
+    }
+}
+
+sub finish
+{
+}
 
 sub _load_and_verify_writer
 {
     my ($self) = @_;
 
-    if ($self->writer) {
-        eval { load($self->writer) };
+    if ($self->writer_class) {
+        eval { load($self->writer_class) };
         if (my $err = $@) {
-            die "Ah, can't load writer class @{[ $self->writer ]}: $err";
+            die "Ah, can't load writer class @{[ $self->writer_class ]}: $err";
         }
 
         eval {
-            my $writer_obj = $self->writer->new;
-            die "Your writer class sux!" unless ($writer_obj->can('write'));
+            my $writer_obj = $self->writer_class->new;
+            foreach my $required_method (qw/write_package_description
+                                            write_scalars
+                                            write_arrays
+                                            write_hashes
+                                            write_ios
+                                            write_public_functions
+                                            write_private_functions
+                                            write_extra_imbedded_pod/) {
+                die "Your writer class must define $required_method" unless ($writer_obj->can($required_method));
+            }
+            $self->writer_obj($writer_obj);
         };
     } else {
         die "No writer class was provided";
@@ -59,6 +101,12 @@ May include numerous subsections (i.e., =head2, =head3, etc.).
 
 
 =head1 SUBROUTINES/METHODS
+
+=head2 initialize_writer
+
+=head2 write_package
+
+=head2 finish
 
 =head2 _load_and_verify_writer
 

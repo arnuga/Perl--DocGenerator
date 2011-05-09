@@ -2,7 +2,174 @@ package Perl::DocGenerator::Writer::HTML;
 
 use strict;
 
-sub writer {}
+use base qw/Perl::DocGenerator::Writer/;
+
+sub before_package
+{
+    print<<'HERE';
+    <table>
+HERE
+}
+
+sub after_package
+{
+    print<<'HERE';
+    </table>
+HERE
+}
+
+sub write_package_description
+{
+    my ($self, $package) = @_;
+    print<<HERE;
+    <tr>
+      <td>
+        Package: @{[ $package->package_name ]}
+      </td>
+    </tr>
+HERE
+}
+
+sub write_scalars
+{
+    my ($self, $package) = @_;
+    if ($package->scalars > 0) {
+        print<<HERE;
+        <tr>
+          <td>
+            Scalars: @{[ join(', ', map { $_->name } $package->scalars) ]}
+          </td>
+        </tr>
+HERE
+    }
+}
+
+sub write_arrays
+{
+    my ($self, $package) = @_;
+    if ($package->arrays > 0) {
+        print<<HERE;
+        <tr>
+          <td>
+            Arrays: @{[ join(', ', map { $_->name } $package->arrays) ]}
+          </td>
+        </tr>
+HERE
+    }
+}
+
+sub write_hashes
+{
+    my ($self, $package) = @_;
+    if ($package->hashes > 0) {
+        print<<HERE;
+        <tr>
+          <td>
+            Hashes: @{[ join(', ', map { $_->name } $package->hashes) ]}
+          </td>
+        </tr>
+HERE
+    }
+}
+
+sub write_ios
+{
+    my ($self, $package) = @_;
+    if ($package->ios > 0) {
+        print<<HERE;
+        <tr>
+          <td>
+            Hashes: @{[ join(', ', map { $_->name } $package->hashes) ]}
+          </td>
+        </tr>
+HERE
+    }
+}
+
+sub write_public_functions
+{
+    my ($self, $package) = @_;
+    if ($package->public_functions > 0) {
+        my @local_functions = ();
+        my %inherited_functions = ();
+        foreach my $function ($package->public_functions) {
+            if ($function->package eq $package->package_name) {
+                push(@local_functions, $function);
+            } else {
+                push(@{$inherited_functions{$function->original_package}}, $function);
+            }
+        }
+
+        print<<HERE;
+        <tr>
+          <td>Public Functions</td>
+        </tr>
+          @{[
+          map {
+        '<tr>' .
+          '<td>' .
+          $_->name .
+          '</td>' .
+        '</tr>'
+          } @local_functions ]}
+HERE
+
+        foreach my $key (keys %inherited_functions) {
+            my @sub_functions = @{$inherited_functions{$key}};
+#            print "\tPublic Functions (from: @{[ $key ]})\n";
+            print<<HERE;
+            <tr>
+              <td>Inherited Functions</td>
+            </tr>
+            @{[ map {
+                my $original_package_name = $_->original_package;
+                $original_package_name =~ s/::/__/g;
+            '<tr>' .
+              '<td>' .
+              '<a href="'. join('#', $original_package_name, $_->name) . '.html">' . join('::', $_->original_package, $_->name) . '</a>' .
+              '</td>' .
+            '</tr>'
+            } @sub_functions ]}
+            <tr>
+            </tr>
+HERE
+        }
+    }
+}
+
+sub write_private_functions
+{
+#    my ($eslf, $package) = @_;
+#    if ($package->private_functions > 0) {
+#        print "\tPrivate Functions:\n";
+#        my @local_functions = ();
+#        my %inherited_functions = ();
+#        foreach my $function ($package->private_functions) {
+#            if ($function->package eq $package->package_name) {
+#                push(@local_functions, $function);
+#            } else {
+#                push(@{$inherited_functions{$function->original_package}}, $function);
+#            }
+#        }
+#
+#        map {
+#            print "\t\t@{[ $_->name ]}\n"
+#        } @local_functions;
+#
+#        foreach my $key (keys %inherited_functions) {
+#            my @sub_functions = @{$inherited_functions{$key}};
+##            print "\tPrivate Functions (from: @{[ $key ]})\n";
+#            map {
+#                print "\t\t@{[ join('::', $_->original_package, $_->name) ]}\n";
+#            } @sub_functions;
+#        }
+#    }
+}
+
+sub write_extra_imbedded_pod
+{
+#    print "\n";
+}
 
 1;
 
@@ -33,7 +200,25 @@ May include numerous subsections (i.e., =head2, =head3, etc.).
 
 =head1 SUBROUTINES/METHODS
 
-=head2 writer
+=head2 before_package
+
+=head2 after_package
+
+=head2 write_package_description
+
+=head2 write_scalars
+
+=head2 write_arrays
+
+=head2 write_hashes
+
+=head2 write_ios
+
+=head2 write_public_functions
+
+=head2 write_private_functions
+
+=head2 write_extra_imbedded_pod
 
 =head1 DIAGNOSTICS
 

@@ -2,7 +2,135 @@ package Perl::DocGenerator::Writer::Screen;
 
 use strict;
 
-sub writer {}
+use base qw/Perl::DocGenerator::Writer/;
+
+sub write_package_description
+{
+    my ($self, $package) = @_;
+    print <<HERE;
+    Package: @{[ $package->package_name ]}
+HERE
+
+#    my @local_functions = ();
+#    my %inherited_functions = ();
+#    foreach my $function ($package->functions) {
+#        if ($function->original_package eq $package->package_name) {
+#            push @local_functions, $function;
+#        } else {
+#            push @{$inherited_functions{$function->original_package}}, $function;
+#        }
+#    }
+#
+#    map { print "\tFunction: @{[ $_->name ]}\n" } @local_functions;
+#
+#    foreach my $sub_class (keys %inherited_functions) {
+#        my @inherited_funcs = @{$inherited_functions{$sub_class}};
+#        print "\tInherited Functions from base class: $sub_class\n";
+#        foreach my $inherited_func (@inherited_funcs) {
+#            next if ($inherited_func->name =~ /^_/);
+#            print "\t\tFunction: @{[ $inherited_func->name ]} [@{[ $inherited_func->original_package ]}::@{[ $inherited_func->name ]}]\n";
+#        }
+#    }
+}
+
+sub write_scalars
+{
+    my ($self, $package) = @_;
+    if ($package->scalars > 0) {
+        print "\tScalars:\n";
+        map { print "\t\t@{[ $_->name ]}\n" } $package->scalars;
+    }
+}
+
+sub write_arrays
+{
+    my ($self, $package) = @_;
+    if ($package->arrays > 0) {
+        print "\tArrays:\n";
+        map { print "\t\t@{[ $_->name ]}\n" } $package->arrays;
+    }
+}
+
+sub write_hashes
+{
+    my ($self, $package) = @_;
+    if ($package->hashes > 0) {
+        print "\tHashes:\n";
+        map { print "\t\t@{[ $_->name ]}\n" } $package->hashes;
+    }
+}
+
+sub write_ios
+{
+    my ($self, $package) = @_;
+    if ($package->ios > 0) {
+        print "\tIO's:\n";
+        map { print "\t\t@{[ $_->name ]}\n" } $package->ios;
+    }
+}
+
+sub write_public_functions
+{
+    my ($self, $package) = @_;
+    if ($package->public_functions > 0) {
+        print "\tPublic Functions:\n";
+        my @local_functions = ();
+        my %inherited_functions = ();
+        foreach my $function ($package->public_functions) {
+            if ($function->package eq $package->package_name) {
+                push(@local_functions, $function);
+            } else {
+                push(@{$inherited_functions{$function->original_package}}, $function);
+            }
+        }
+
+        map {
+            print "\t\t@{[ $_->name ]}\n"
+        } @local_functions;
+
+        foreach my $key (keys %inherited_functions) {
+            my @sub_functions = @{$inherited_functions{$key}};
+#            print "\tPublic Functions (from: @{[ $key ]})\n";
+            map {
+                print "\t\t@{[ join('::', $_->original_package, $_->name) ]}\n";
+            } @sub_functions;
+        }
+    }
+}
+
+sub write_private_functions
+{
+    my ($eslf, $package) = @_;
+    if ($package->private_functions > 0) {
+        print "\tPrivate Functions:\n";
+        my @local_functions = ();
+        my %inherited_functions = ();
+        foreach my $function ($package->private_functions) {
+            if ($function->package eq $package->package_name) {
+                push(@local_functions, $function);
+            } else {
+                push(@{$inherited_functions{$function->original_package}}, $function);
+            }
+        }
+
+        map {
+            print "\t\t@{[ $_->name ]}\n"
+        } @local_functions;
+
+        foreach my $key (keys %inherited_functions) {
+            my @sub_functions = @{$inherited_functions{$key}};
+#            print "\tPrivate Functions (from: @{[ $key ]})\n";
+            map {
+                print "\t\t@{[ join('::', $_->original_package, $_->name) ]}\n";
+            } @sub_functions;
+        }
+    }
+}
+
+sub write_extra_imbedded_pod
+{
+    print "\n";
+}
 
 1;
 
@@ -33,7 +161,21 @@ May include numerous subsections (i.e., =head2, =head3, etc.).
 
 =head1 SUBROUTINES/METHODS
 
-=head2 writer
+=head2 write_package_description
+
+=head2 write_scalars
+
+=head2 write_arrays
+
+=head2 write_hashes
+
+=head2 write_ios
+
+=head2 write_public_functions
+
+=head2 write_private_functions
+
+=head2 write_extra_imbedded_pod
 
 =head1 DIAGNOSTICS
 

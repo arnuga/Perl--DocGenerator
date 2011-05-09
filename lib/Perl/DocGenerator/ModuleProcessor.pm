@@ -156,7 +156,7 @@ sub arrays
 
     foreach my $base_class ($self->base_classes) {
         my @base_items = $self->_module_for_package($base_class->name)->arrays();
-        @base_items = $self->_unique_items_from_first_list(\@base_items, $self->_arrays);
+        @base_items = $self->_unique_items_from_first_list(\@base_items, [ $self->_arrays ]);
         push(@return_arrays, @base_items);
     }
 
@@ -189,7 +189,7 @@ sub hashes
     foreach my $hash (@hashes) {
         my $item_obj = Item->new->object_type(T_HASH)
                                 ->name($hash)
-                                ->package_name($self->package_name)
+                                ->package($self->package_name)
                                 ->original_package($self->package_name)
                                 ->full_name(join('::', $self->package_name, $hash));
         push(@return_hashes, $item_obj);
