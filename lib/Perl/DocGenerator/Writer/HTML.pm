@@ -3,19 +3,71 @@ package Perl::DocGenerator::Writer::HTML;
 use strict;
 
 use base qw/Perl::DocGenerator::Writer/;
+use Module::Load;
+use HTML::Template;
+use Module::Info;
+use File::Spec;
+
+__PACKAGE__->mk_accessors(qw/
+    package_template_file
+    toc_template_file
+    header_template_file
+    footer_template_file
+    current_page_template
+    toc_template
+    header_template
+    footer_template
+    pages
+/);
+
+sub init_writer
+{
+    my ($self) = @_;
+
+    my $package_info = Module::Info->new_from_loaded(__PACKAGE__);
+    if ($package_info) {
+        my $possible_package_template_file = File::Spec->catfile($package_info->file, 'html_templates', 'package.tmpl');
+        if ($possible_package_template_file && -f $possible_package_template_file) {
+            $self->package_template_file($possible_package_template_file);
+        }
+
+        my $possible_toc_template_file = File::Spec->catfile($package_info->file, 'html_templates', 'tos.tmpl');
+        if ($possible_toc_template_file && -f $possible_toc_template_file) {
+            $self->toc_template_file($possible_toc_template_file);
+        }
+
+        my $possible_header_template_file = File::Spec->catfile($package_info->file, 'html_templates', 'header.tmpl');
+        if ($possible_header_template_file && -f $possible_header_template_file) {
+            $self->header_template_file($possible_header_template_file);
+        }
+
+        my $possible_footer_template_file = File::Spec->catfile($package_info->file, 'html_templates', 'footer.tmpl');
+        if ($possible_footer_template_file && -f $possible_footer_template_file) {
+            $self->footer_template_file($possible_footer_template_file);
+        }
+    } else {
+        die "Unable to location physical html template files";
+    }
+
+    die "Missing one or more templates"
+        unless ($self->package_template_file && $self->toc_template_file && $self->header_template_file && $self->footer_template_file);
+}
 
 sub before_package
 {
-    print<<'HERE';
-    <table>
-HERE
+    my ($self) = @_;
+
+    $self->current_page_template(HTML::Template->new_file(filename => $self->package_template_file));
 }
 
 sub after_package
 {
-    print<<'HERE';
-    </table>
-HERE
+    my ($self) = @_;
+
+    if ($self->current_page_template) {
+        push(@{$self->pages}, $self->current_page_template);
+        $self->current_page_template(undef);
+    }
 }
 
 sub write_package_description
@@ -100,23 +152,8 @@ sub write_public_functions
             }
         }
 
-        print<<HERE;
-        <tr>
-          <td>Public Functions</td>
-        </tr>
-          @{[
-          map {
-        '<tr>' .
-          '<td>' .
-          $_->name .
-          '</td>' .
-        '</tr>'
-          } @local_functions ]}
-HERE
-
         foreach my $key (keys %inherited_functions) {
             my @sub_functions = @{$inherited_functions{$key}};
-#            print "\tPublic Functions (from: @{[ $key ]})\n";
             print<<HERE;
             <tr>
               <td>Inherited Functions</td>
@@ -139,31 +176,39 @@ HERE
 
 sub write_private_functions
 {
-#    my ($eslf, $package) = @_;
-#    if ($package->private_functions > 0) {
-#        print "\tPrivate Functions:\n";
-#        my @local_functions = ();
-#        my %inherited_functions = ();
-#        foreach my $function ($package->private_functions) {
-#            if ($function->package eq $package->package_name) {
-#                push(@local_functions, $function);
-#            } else {
-#                push(@{$inherited_functions{$function->original_package}}, $function);
-#            }
-#        }
-#
-#        map {
-#            print "\t\t@{[ $_->name ]}\n"
-#        } @local_functions;
-#
+    my ($self, $package) = @_;
+    if ($package->private_functions > 0) {
+        my @local_functions = ();
+        my %inherited_functions = ();
+        foreach my $function ($package->private_functions) {
+            if ($function->package eq $package->package_name) {
+                push(@local_functions, $function);
+            } else {
+                push(@{$inherited_functions{$function->original_package}}, $function);
+            }
+        }
+
+
 #        foreach my $key (keys %inherited_functions) {
 #            my @sub_functions = @{$inherited_functions{$key}};
-##            print "\tPrivate Functions (from: @{[ $key ]})\n";
-#            map {
-#                print "\t\t@{[ join('::', $_->original_package, $_->name) ]}\n";
-#            } @sub_functions;
+#            print<<HERE;
+#            <tr>
+#              <td>Inherited Functions</td>
+#            </tr>
+#            @{[ map {
+#                my $original_package_name = $_->original_package;
+#                $original_package_name =~ s/::/__/g;
+#            '<tr>' .
+#              "<td name=\"@{[ $_->name ]}" id="@{[ $_->name ]}\">" .
+#              '<a href="'. join('#', $original_package_name, $_->name) . '.html">' . join('::', $_->original_package, $_->name) . '</a>' .
+#              '</td>' .
+#            '</tr>'
+#            } @sub_functions ]}
+#            <tr>
+#            </tr>
+#HERE
 #        }
-#    }
+    }
 }
 
 sub write_extra_imbedded_pod
@@ -199,6 +244,8 @@ May include numerous subsections (i.e., =head2, =head3, etc.).
 
 
 =head1 SUBROUTINES/METHODS
+
+=head2 init_writer
 
 =head2 before_package
 

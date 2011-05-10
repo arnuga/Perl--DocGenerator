@@ -15,7 +15,13 @@ sub initialize_writer
 {
     my ($self) = @_;
     $self->writer_class || $self->writer_class('Perl::DocGenerator::Writer::Screen');
-    return $self->_load_and_verify_writer();
+    if ($self->_load_and_verify_writer()) {
+        if ($self->writer_obj && $self->writer_obj->can('init_writer')) {
+            $self->writer_obj->init_writer();
+        }
+        return 1;
+    }
+    return undef;
 }
 
 sub write_package
@@ -103,6 +109,12 @@ May include numerous subsections (i.e., =head2, =head3, etc.).
 =head1 SUBROUTINES/METHODS
 
 =head2 initialize_writer
+
+=head2 init_writer
+
+=head2 before_package
+
+=head2 after_package
 
 =head2 write_package
 

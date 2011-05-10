@@ -5,9 +5,10 @@ lib/Perl/DocGenerator/ModuleProcessor.pm
 lib/Perl/DocGenerator/Item.pm
 lib/Perl/DocGenerator/Writer.pm
 lib/Perl/DocGenerator/Writer/HTML.pm
-lib/Perl/DocGenerator/Writer/HTML/TOC_Template.mas
-lib/Perl/DocGenerator/Writer/HTML/Package_Template.mas
-lib/Perl/DocGenerator/Writer/HTML/SingleFile_Template.mas
+lib/Perl/DocGenerator/Writer/html_templates/toc.tmpl
+lib/Perl/DocGenerator/Writer/html_templates/package.tmpl
+lib/Perl/DocGenerator/Writer/html_templates/header.tmpl
+lib/Perl/DocGenerator/Writer/html_templates/footer.tmpl
 lib/Perl/DocGenerator/Writer/PDF.pm
 lib/Perl/DocGenerator/Writer/Pod.pm
 lib/Perl/DocGenerator/Writer/Screen.pm

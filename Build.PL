@@ -12,9 +12,13 @@ my $builder = Module::Build->new(
         'Test::More' => 0,
     },
     requires => {
-        'perl' => 5.006,
+        'perl'           => 5.006,
+        'File::Spec'     => 0,
+        'Module::Load'   => 0,
+        'Module::Info'   => 0,
+        'HTML::Template' => 0,
     },
-    add_to_cleanup      => [ 'Perl-DocGenerator-*' ],
+    add_to_cleanup     => [ 'Perl-DocGenerator-*' ],
     create_makefile_pl => 'traditional',
 );
 
