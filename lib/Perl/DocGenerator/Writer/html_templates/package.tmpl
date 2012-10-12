@@ -27,59 +27,47 @@ extends <TMPL_VAR NAME=BASE_CLASS_NAME>
 <TMPL_IF NAME=HAS_SCALARS> 
 <table border="1" width="100%"> 
   <tr bgcolor="#CCCCFF"> 
-    <td><font size="+2"><b>Scalars</b></font></td> 
-    <td> 
-      <TMPL_LOOP NAME=SCALARS> 
-        <TMPL_VAR NAME=SCALAR> 
-      </TMPL_LOOP> 
+    <td colspan="3">
+        <font size="+2"><b>Scalars: </b></font>
+        <TMPL_LOOP NAME=SCALARS> 
+          <TMPL_VAR NAME=SCALAR>
+        </TMPL_LOOP> 
     </td> 
   </tr> 
-</table> 
-<br /> 
 </TMPL_IF> 
 <TMPL_IF NAME=HAS_ARRAYS> 
-<table border="1" width="100%"> 
   <tr bgcolor="#CCCCFF"> 
-    <td><font size="+2"><b>Arrays</b></font></td> 
-    <td> 
-      <TMPL_LOOP NAME=ARRAYS> 
-        <TMPL_VAR NAME=ARRAY> 
-      </TMPL_LOOP> 
+    <td colspan="3">
+        <font size="+2"><b>Arrays: </b></font>
+        <TMPL_LOOP NAME=ARRAYS> 
+          <TMPL_VAR NAME=ARRAY> 
+        </TMPL_LOOP> 
     </td> 
   </tr> 
-</table> 
-<br /> 
 </TMPL_IF> 
 <TMPL_IF NAME=HAS_HASHES> 
-<table border="1" width="100%"> 
   <tr bgcolor="#CCCCFF"> 
-    <td><font size="+2"><b>Hashes</b></font></td> 
-    <td> 
-      <TMPL_LOOP NAME=HASHES> 
-        <TMPL_VAR NAME=HASH> 
-      </TMPL_LOOP> 
+    <td colspan="3">
+        <font size="+2"><b>Hashes: </b></font>
+        <TMPL_LOOP NAME=HASHES> 
+          <TMPL_VAR NAME=HASH> 
+        </TMPL_LOOP> 
     </td> 
   </tr> 
-</table> 
-<br /> 
 </TMPL_IF> 
 <TMPL_IF NAME=HAS_IOS> 
-<table border="1" width="100%"> 
   <tr bgcolor="#CCCCFF"> 
-    <td><font size="+2"><b>IOs</b></font></td> 
-    <td> 
-      <TMPL_LOOP NAME=IOS> 
-        <TMPL_VAR NAME=IO> 
-      </TMPL_LOOP> 
+    <td colspan="3">
+        <font size="+2"><b>IOs: </b></font>
+        <TMPL_LOOP NAME=IOS> 
+          <TMPL_VAR NAME=IO> 
+        </TMPL_LOOP> 
     </td> 
   </tr> 
-</table> 
-<br /> 
 </TMPL_IF> 
 <TMPL_IF NAME=HAS_PUBLIC_FUNCTIONS> 
-<table border="1" width="100%"> 
   <tr bgcolor="#CCCCFF"> 
-    <td colspan="3"><font size="+2"><b>Functions</b></font></td> 
+    <td colspan="3"><font size="+2"><b>Public Functions</b></font></td> 
   </tr> 
   <tr> 
     <td><b>Function Name</b></td> 
@@ -93,12 +81,10 @@ extends <TMPL_VAR NAME=BASE_CLASS_NAME>
     <td><a href="<TMPL_VAR NAME=BASE_CLASS_FUNCTION_HREF>"><TMPL_VAR NAME=BASE_CLASS_FUNCTION_HREF_NAME></a></td> 
   </tr> 
   </TMPL_LOOP> 
-</table> 
 </TMPL_IF> 
 <TMPL_IF NAME=HAS_PRIVATE_FUNCTIONS> 
-<table border="1" width="100%"> 
   <tr bgcolor="#CCCCFF"> 
-    <td colspan="3"><font size="+2"><b>Functions</b></font></td> 
+    <td colspan="3"><font size="+2"><b>Private Functions</b></font></td> 
   </tr> 
   <tr> 
     <td><b>Function Name</b></td> 
@@ -112,8 +98,8 @@ extends <TMPL_VAR NAME=BASE_CLASS_NAME>
     <td><a href="<TMPL_VAR NAME=BASE_CLASS_FUNCTION_HREF>"><TMPL_VAR NAME=BASE_CLASS_FUNCTION_HREF_NAME></a></td> 
   </tr> 
   </TMPL_LOOP> 
-</table> 
 </TMPL_IF> 
+</table> 
 <hr /> 
 <TMPL_INCLUDE NAME="footer.tmpl">
 </html> 

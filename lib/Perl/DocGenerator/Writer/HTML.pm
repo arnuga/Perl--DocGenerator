@@ -75,9 +75,13 @@ sub after_package
 {
     my ($self, $package) = @_;
     if ($self->page_template) {
-        my @pages = @{$self->pages()};
-        push @pages, { $package->package_name => $self->page_template->output };
-        $self->pages([@pages]);
+        my $page_output = $self->page_template->output();
+        my $package_name = $package->package_name;
+        $package_name =~ s/\:\:/_/g;
+        $package_name .= '.html';
+        open(FILE, ">$package_name") or die "Unable to create file $package_name: $!\n";
+        print FILE $page_output;
+        close(FILE) or die "Unable to close file $package_name: $!\n";
     }
 }
 
@@ -93,7 +97,7 @@ sub write_scalars
     if ($package->scalars > 0) {
         $self->page_template->param(HAS_SCALARS => 1);
         $self->page_template->param(
-            SCALARS => [ map { { SCALAR => $_ } } $package->scalars ]
+            SCALARS => [ map { { SCALAR => $_->name() } } $package->scalars ]
         );
     }
 }
@@ -104,7 +108,7 @@ sub write_arrays
     if ($package->arrays > 0) {
         $self->page_template->param(HAS_ARRAYS => 1);
         $self->page_template->param(
-            ARRAYS => [ map { { ARRAY => $_ } } $package->arrays ]
+            ARRAYS => [ map { { ARRAY => $_->name() } } $package->arrays ]
         );
     }
 }
@@ -115,7 +119,7 @@ sub write_hashes
     if ($package->hashes > 0) {
         $self->page_template->param(HAS_HASHES => 1);
         $self->page_template->param(
-            HASHES => [ map { { HASH => $_ } } $package->hashes ]
+            HASHES => [ map { { HASH => $_->name() } } $package->hashes ]
         );
     }
 }
@@ -126,7 +130,7 @@ sub write_ios
     if ($package->ios > 0) {
         $self->page_template->param(HAS_IOS => 1);
         $self->page_template->param(
-            IOS => [ map { { IO => $_ } } $package->ios ]
+            IOS => [ map { { IO => $_->name() } } $package->ios ]
         );
     }
 }
@@ -137,7 +141,7 @@ sub write_public_functions
     if ($package->public_functions > 0) {
         $self->page_template->param(HAS_PUBLIC_FUNCTIONS => 1);
         $self->page_template->param(
-            PUBLIC_FUNCTIONS => [ map { { FUNCTION_NAME => $_ } } $package->public_functions ]
+            PUBLIC_FUNCTIONS => [ map { { FUNCTION_NAME => $_->name() } } $package->public_functions ]
         );
     }
 }
@@ -148,7 +152,7 @@ sub write_private_functions
     if ($package->private_functions > 0) {
         $self->page_template->param(HAS_PRIVATE_FUNCTIONS => 1);
         $self->page_template->param(
-            PRIVATE_FUNCTIONS => [ map { { FUNCTION_NAME => $_ } } $package->private_functions ]
+            PRIVATE_FUNCTIONS => [ map { { FUNCTION_NAME => $_->name() } } $package->private_functions ]
         );
     }
 }
