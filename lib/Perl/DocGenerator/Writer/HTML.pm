@@ -26,22 +26,30 @@ sub init_writer
 
     my $package_info = Module::Info->new_from_loaded(__PACKAGE__);
     if ($package_info) {
-        my $possible_package_template_file = File::Spec->catfile($package_info->file, 'html_templates', 'package.tmpl');
+        my $base_template_dir = File::Spec->catfile(
+          $package_info->inc_dir,
+          'Perl',
+          'DocGenerator',
+          'Writer',
+          'html_templates'
+        );
+
+        my $possible_package_template_file = File::Spec->catfile($base_template_dir, 'package.tmpl');
         if ($possible_package_template_file && -f $possible_package_template_file) {
             $self->package_template_file($possible_package_template_file);
         }
 
-        my $possible_toc_template_file = File::Spec->catfile($package_info->file, 'html_templates', 'tos.tmpl');
+        my $possible_toc_template_file = File::Spec->catfile($base_template_dir, 'toc.tmpl');
         if ($possible_toc_template_file && -f $possible_toc_template_file) {
             $self->toc_template_file($possible_toc_template_file);
         }
 
-        my $possible_header_template_file = File::Spec->catfile($package_info->file, 'html_templates', 'header.tmpl');
+        my $possible_header_template_file = File::Spec->catfile($base_template_dir, 'header.tmpl');
         if ($possible_header_template_file && -f $possible_header_template_file) {
             $self->header_template_file($possible_header_template_file);
         }
 
-        my $possible_footer_template_file = File::Spec->catfile($package_info->file, 'html_templates', 'footer.tmpl');
+        my $possible_footer_template_file = File::Spec->catfile($base_template_dir, 'footer.tmpl');
         if ($possible_footer_template_file && -f $possible_footer_template_file) {
             $self->footer_template_file($possible_footer_template_file);
         }
@@ -50,7 +58,10 @@ sub init_writer
     }
 
     die "Missing one or more templates"
-        unless ($self->package_template_file && $self->toc_template_file && $self->header_template_file && $self->footer_template_file);
+        unless ($self->package_template_file
+             && $self->toc_template_file
+             && $self->header_template_file
+             && $self->footer_template_file);
 }
 
 sub before_package
@@ -269,62 +280,27 @@ May include numerous subsections (i.e., =head2, =head3, etc.).
 
 =head1 DIAGNOSTICS
 
-A list of every error and warning message that the module can generate
-(even the ones that will "never happen"), with a full explanation of each
-problem, one or more likely causes, and any suggested remedies.
-
-
 =head1 CONFIGURATION AND ENVIRONMENT
-
-A full explanation of any configuration system(s) used by the module,
-including the names and locations of any configuration files, and the
-meaning of any environment variables or properties that can be set. These
-descriptions must also include details of any configuration language used.
-
 
 =head1 DEPENDENCIES
 
-A list of all the other modules that this module relies upon, including any
-restrictions on versions, and an indication of whether these required modules are
-part of the standard Perl distribution, part of the module's distribution,
-or must be installed separately.
-
-
 =head1 INCOMPATIBILITIES
-
-A list of any modules that this module cannot be used in conjunction with.
-This may be due to name conflicts in the interface, or competition for
-system or program resources, or due to the internal limitations of Perl
-(for example, many modules that use source code filters are mutually incompatible).
-
 
 =head1 BUGS AND LIMITATIONS
 
-A list of known problems with the module, together with some indication of
-whether they are likely to be fixed in an upcoming release.
-
-Also a list of restrictions on the features the module does provide:
-data types that cannot be handled, performance issues and the circumstances
-in which they may arise, practical limitations on the size of data sets,
-special cases that are not (yet) handled, etc.
-(example)
-
 There are no known bugs in this module.
-Please reports problems to <Maintainer name(s)> (<contact address>)
+Please reports problems to David Shultz (djshultz@gmail.com)
 Patches are welcome.
 
 
 =head1 AUTHOR
 
-<Author name(s)> (<contact address>)
+David Shultz (djshultz@gmail.com)
 
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright (c) <year> <copyright holder> (<contact address>). All rights reserved.
-
-followed by whatever license you wish to release it under.
-(for Perl code that is often just:)
+Copyright (c) 2012 David Shultz (djshultz@gmail.com). All rights reserved.
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself. See L<perlartistic>.

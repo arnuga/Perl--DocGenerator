@@ -1,16 +1,23 @@
 Perl-DocGenerator
 
-The README is used to introduce the module and provide instructions on
-how to install the module, any machine dependencies it may have (for
-example C compilers and installed libraries) and any other information
-that should be provided before the module is installed.
+This module is my attempt to auto-generate searchable and indexable 
+documentation for a work project that spans over 2 million lines of 
+perl code.  Frankly I got tired of new hires over the years asking
+about docs and having to shrug my shoulders.  I didn't really want
+to write the docs myself so I decided that perl might ne able to 
+help with documenting my perl code.  This module does it's (my) best
+at providing documentation about the .pm files you have, what they
+include, inherit from, etc.  It should capture constants, functions,
+inheritted functions, class methods, packages, package level scalars,
+arrays, hashes, etc.  I'm sure it's missing a lot but it's a start,
+if you have something better then I'm guessing you wouldn't be reading
+this.  I'm very open to patches, comments, suggestions, etc.  Please
+direct all complaints to /dev/null.
 
-A README file is required for CPAN modules since CPAN extracts the README
-file from a module distribution so that people browsing the archive
-can use it to get an idea of the module's uses. It is usually a good idea
-to provide version information here so that people can decide whether
-fixes for the module are worth downloading.
-
+Side note; I don't do moose so no, this is not a moose/mouse/mice/whatever
+class.  I haven't looked at how moose works from an inheritance POV so it
+may not work for you if you're into that sorta thing.  If moose is so
+cool then why doesn't it already do this? huh?
 
 INSTALLATION
 

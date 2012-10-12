@@ -1,5 +1,8 @@
 Revision history for Perl-DocGenerator
 
+0.02    October 12th, 2012/14:11 PM PST
+        Fixed up the HTML template tests
+
 0.01    April 29th, 2011/14:11 PM PST
         First version, released on an unsuspecting world.
 

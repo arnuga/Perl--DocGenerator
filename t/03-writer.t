@@ -13,11 +13,7 @@ use Perl::DocGenerator::Writer::PDF;
 {
     my $writer = Perl::DocGenerator::Writer->new();
     ok($writer);
-
     $writer->writer_class('Perl::DocGenerator::Writer::XML'); 
-    ok($writer->initialize_writer());
-
-    $writer->writer_class('Perl::DocGenerator::Writer::HTML'); 
     ok($writer->initialize_writer());
 
     $writer->writer_class('Perl::DocGenerator::Writer::Screen'); 
@@ -27,5 +23,8 @@ use Perl::DocGenerator::Writer::PDF;
     ok($writer->initialize_writer());
 
     $writer->writer_class('Perl::DocGenerator::Writer::PDF'); 
+    ok($writer->initialize_writer());
+
+    $writer->writer_class('Perl::DocGenerator::Writer::HTML'); 
     ok($writer->initialize_writer());
 }
