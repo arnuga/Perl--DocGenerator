@@ -4,10 +4,10 @@ This module is my attempt to auto-generate searchable and indexable
 documentation for a work project that spans over 2 million lines of 
 perl code.  Frankly I got tired of new hires over the years asking
 about docs and having to shrug my shoulders.  I didn't really want
-to write the docs myself so I decided that perl might ne able to 
+to write the docs myself so I decided that perl might be able to 
 help with documenting my perl code.  This module does it's (my) best
 at providing documentation about the .pm files you have, what they
-include, inherit from, etc.  It should capture constants, functions,
+include, inherit from, etc.  It should capture functions,
 inheritted functions, class methods, packages, package level scalars,
 arrays, hashes, etc.  I'm sure it's missing a lot but it's a start,
 if you have something better then I'm guessing you wouldn't be reading
@@ -16,8 +16,9 @@ direct all complaints to /dev/null.
 
 Side note; I don't do moose so no, this is not a moose/mouse/mice/whatever
 class.  I haven't looked at how moose works from an inheritance POV so it
-may not work for you if you're into that sorta thing.  If moose is so
-cool then why doesn't it already do this? huh?
+may not work for you if you're into that sorta thing. Besides isn't moose
+supposed to be the kitchen sink of "modern perl"? Shouldn't it do this 
+already?
 
 INSTALLATION
 
