@@ -2,7 +2,7 @@
 
 use strict;
 use lib 't/lib';
-use Test::More tests => 12;
+use Test::More tests => 15;
 use Perl::DocGenerator::ModuleProcessor;
 
 {
@@ -25,6 +25,13 @@ use Perl::DocGenerator::ModuleProcessor;
 {
     my $module = Perl::DocGenerator::ModuleProcessor->new('Bah');
 
+    my @classes = $module->base_classes;
+    my $num_classes = scalar @classes;
+
+    cmp_ok($num_classes, '==', 2);
+    cmp_ok($classes[0]->name, 'eq', 'Baz');
+    cmp_ok($classes[1]->name, 'eq', 'Bar');
+    
     my @scalars = $module->scalars;
     my $num_scalars = scalar @scalars;
 

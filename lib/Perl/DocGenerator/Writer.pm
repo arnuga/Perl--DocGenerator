@@ -28,7 +28,7 @@ sub write_package
 {
     my ($self, $package_obj) = splice(@_, 0, 2);
     if ($self->writer_obj->can('before_package')) {
-        $self->writer_obj->before_package();
+        $self->writer_obj->before_package($package_obj);
     }
     $self->writer_obj->write_package_description($package_obj);
     $self->writer_obj->write_scalars($package_obj);
@@ -40,7 +40,7 @@ sub write_package
     $self->writer_obj->write_extra_imbedded_pod($package_obj);
 
     if ($self->writer_obj->can('after_package')) {
-        $self->writer_obj->after_package();
+        $self->writer_obj->after_package($package_obj);
     }
 }
 

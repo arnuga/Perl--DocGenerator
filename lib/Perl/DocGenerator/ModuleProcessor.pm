@@ -24,12 +24,21 @@ sub new
     my $self = {};
     bless $self, $class;
 
-    $self->package_name($package);
 
     eval { load($package) };
     if (my $err = $@) {
         die "Unable to load package '$package': $err";
     }
+
+    if ($package =~ /\.pm$/) {
+        my $likely_module_name = $self->_module_name_from_filename($package);
+        if ($likely_module_name) {
+            $package = $likely_module_name;
+        } else {
+            die "Unable to determine module name from file: $package.  Maybe $package is not a real package?";
+        }
+    }
+    $self->package_name($package);
     $self->obj(Devel::Symdump->new($package));
 
     return $self;
@@ -244,6 +253,25 @@ sub _unique_items_from_first_list
     map { push(@aonly, $_) unless exists $seen{$_->name} } @$arrayA;
 
     return @aonly;
+}
+
+sub _module_name_from_filename
+{
+    my ($self, $filename) = @_;
+    if (-f $filename) {
+        open(FILE, $filename) or die "Unable to open file $filename for reading";
+        my $first_line = <FILE>;
+        close(FILE) or die "Unable to close file $filename, that's not really supposed to happen";
+        chomp($first_line);
+
+        $first_line =~ /package\s([^;]+);/i;
+        if ($1) {
+            my $package_name = $1;
+            $package_name =~ s/\s*//g;
+            return $package_name;
+        }
+    }
+    return undef;
 }
 
 1;

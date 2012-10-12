@@ -76,7 +76,7 @@ extends <TMPL_VAR NAME=BASE_CLASS_NAME>
 </table> 
 <br /> 
 </TMPL_IF> 
-<TMPL_IF NAME=HAS_FUNCTIONS> 
+<TMPL_IF NAME=HAS_PUBLIC_FUNCTIONS> 
 <table border="1" width="100%"> 
   <tr bgcolor="#CCCCFF"> 
     <td colspan="3"><font size="+2"><b>Functions</b></font></td> 
@@ -86,11 +86,30 @@ extends <TMPL_VAR NAME=BASE_CLASS_NAME>
     <td><b>Details</b></td> 
     <td><b>Inherited From</b></td> 
   </tr> 
-  <TMPL_LOOP NAME=IOS> 
+  <TMPL_LOOP NAME=PUBLIC_FUNCTIONS> 
   <tr> 
     <td><TMPL_VAR NAME=FUNCTION_NAME></td> 
     <td><TMPL_VAR NAME=FUNCTION_POD></td> 
-    <td><a href="<TMPL_VAR NAME=BASE_CLASS_FUNCTION_LINK>"><TMPL_VAR NAME=BASE_CLASS_FUNCTION_LINK_NAME></a></td> 
+    <td><a href="<TMPL_VAR NAME=BASE_CLASS_FUNCTION_HREF>"><TMPL_VAR NAME=BASE_CLASS_FUNCTION_HREF_NAME></a></td> 
+  </tr> 
+  </TMPL_LOOP> 
+</table> 
+</TMPL_IF> 
+<TMPL_IF NAME=HAS_PRIVATE_FUNCTIONS> 
+<table border="1" width="100%"> 
+  <tr bgcolor="#CCCCFF"> 
+    <td colspan="3"><font size="+2"><b>Functions</b></font></td> 
+  </tr> 
+  <tr> 
+    <td><b>Function Name</b></td> 
+    <td><b>Details</b></td> 
+    <td><b>Inherited From</b></td> 
+  </tr> 
+  <TMPL_LOOP NAME=PRIVATE_FUNCTIONS> 
+  <tr> 
+    <td><TMPL_VAR NAME=FUNCTION_NAME></td> 
+    <td><TMPL_VAR NAME=FUNCTION_POD></td> 
+    <td><a href="<TMPL_VAR NAME=BASE_CLASS_FUNCTION_HREF>"><TMPL_VAR NAME=BASE_CLASS_FUNCTION_HREF_NAME></a></td> 
   </tr> 
   </TMPL_LOOP> 
 </table> 

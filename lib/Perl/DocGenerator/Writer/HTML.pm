@@ -13,7 +13,7 @@ __PACKAGE__->mk_accessors(qw/
     toc_template_file
     header_template_file
     footer_template_file
-    current_page_template
+    page_template
     toc_template
     header_template
     footer_template
@@ -24,6 +24,7 @@ sub init_writer
 {
     my ($self) = @_;
 
+    $self->pages([]);
     my $package_info = Module::Info->new_from_loaded(__PACKAGE__);
     if ($package_info) {
         my $base_template_dir = File::Spec->catfile(
@@ -34,24 +35,24 @@ sub init_writer
           'html_templates'
         );
 
-        my $possible_package_template_file = File::Spec->catfile($base_template_dir, 'package.tmpl');
-        if ($possible_package_template_file && -f $possible_package_template_file) {
-            $self->package_template_file($possible_package_template_file);
+        my $default_package_template_file = File::Spec->catfile($base_template_dir, 'package.tmpl');
+        if ($default_package_template_file && -f $default_package_template_file) {
+            $self->package_template_file($default_package_template_file);
         }
 
-        my $possible_toc_template_file = File::Spec->catfile($base_template_dir, 'toc.tmpl');
-        if ($possible_toc_template_file && -f $possible_toc_template_file) {
-            $self->toc_template_file($possible_toc_template_file);
+        my $default_toc_template_file = File::Spec->catfile($base_template_dir, 'toc.tmpl');
+        if ($default_toc_template_file && -f $default_toc_template_file) {
+            $self->toc_template_file($default_toc_template_file);
         }
 
-        my $possible_header_template_file = File::Spec->catfile($base_template_dir, 'header.tmpl');
-        if ($possible_header_template_file && -f $possible_header_template_file) {
-            $self->header_template_file($possible_header_template_file);
+        my $default_header_template_file = File::Spec->catfile($base_template_dir, 'header.tmpl');
+        if ($default_header_template_file && -f $default_header_template_file) {
+            $self->header_template_file($default_header_template_file);
         }
 
-        my $possible_footer_template_file = File::Spec->catfile($base_template_dir, 'footer.tmpl');
-        if ($possible_footer_template_file && -f $possible_footer_template_file) {
-            $self->footer_template_file($possible_footer_template_file);
+        my $default_footer_template_file = File::Spec->catfile($base_template_dir, 'footer.tmpl');
+        if ($default_footer_template_file && -f $default_footer_template_file) {
+            $self->footer_template_file($default_footer_template_file);
         }
     } else {
         die "Unable to location physical html template files";
@@ -66,44 +67,34 @@ sub init_writer
 
 sub before_package
 {
-    my ($self) = @_;
-
-    $self->current_page_template(HTML::Template->new_file(filename => $self->package_template_file));
+    my ($self, $package) = @_;
+    $self->page_template(HTML::Template->new(filename => $self->package_template_file));
 }
 
 sub after_package
 {
-    my ($self) = @_;
-
-    if ($self->current_page_template) {
-        push(@{$self->pages}, $self->current_page_template);
-        $self->current_page_template(undef);
+    my ($self, $package) = @_;
+    if ($self->page_template) {
+        my @pages = @{$self->pages()};
+        push @pages, { $package->package_name => $self->page_template->output };
+        $self->pages([@pages]);
     }
 }
 
 sub write_package_description
 {
     my ($self, $package) = @_;
-    print<<HERE;
-    <tr>
-      <td>
-        Package: @{[ $package->package_name ]}
-      </td>
-    </tr>
-HERE
+    $self->page_template->param(PACKAGE_NAME => $package->package_name);
 }
 
 sub write_scalars
 {
     my ($self, $package) = @_;
     if ($package->scalars > 0) {
-        print<<HERE;
-        <tr>
-          <td>
-            Scalars: @{[ join(', ', map { $_->name } $package->scalars) ]}
-          </td>
-        </tr>
-HERE
+        $self->page_template->param(HAS_SCALARS => 1);
+        $self->page_template->param(
+            SCALARS => [ map { { SCALAR => $_ } } $package->scalars ]
+        );
     }
 }
 
@@ -111,13 +102,10 @@ sub write_arrays
 {
     my ($self, $package) = @_;
     if ($package->arrays > 0) {
-        print<<HERE;
-        <tr>
-          <td>
-            Arrays: @{[ join(', ', map { $_->name } $package->arrays) ]}
-          </td>
-        </tr>
-HERE
+        $self->page_template->param(HAS_ARRAYS => 1);
+        $self->page_template->param(
+            ARRAYS => [ map { { ARRAY => $_ } } $package->arrays ]
+        );
     }
 }
 
@@ -125,13 +113,10 @@ sub write_hashes
 {
     my ($self, $package) = @_;
     if ($package->hashes > 0) {
-        print<<HERE;
-        <tr>
-          <td>
-            Hashes: @{[ join(', ', map { $_->name } $package->hashes) ]}
-          </td>
-        </tr>
-HERE
+        $self->page_template->param(HAS_HASHES => 1);
+        $self->page_template->param(
+            HASHES => [ map { { HASH => $_ } } $package->hashes ]
+        );
     }
 }
 
@@ -139,13 +124,10 @@ sub write_ios
 {
     my ($self, $package) = @_;
     if ($package->ios > 0) {
-        print<<HERE;
-        <tr>
-          <td>
-            Hashes: @{[ join(', ', map { $_->name } $package->hashes) ]}
-          </td>
-        </tr>
-HERE
+        $self->page_template->param(HAS_IOS => 1);
+        $self->page_template->param(
+            IOS => [ map { { IO => $_ } } $package->ios ]
+        );
     }
 }
 
@@ -153,35 +135,10 @@ sub write_public_functions
 {
     my ($self, $package) = @_;
     if ($package->public_functions > 0) {
-        my @local_functions = ();
-        my %inherited_functions = ();
-        foreach my $function ($package->public_functions) {
-            if ($function->package eq $package->package_name) {
-                push(@local_functions, $function);
-            } else {
-                push(@{$inherited_functions{$function->original_package}}, $function);
-            }
-        }
-
-        foreach my $key (keys %inherited_functions) {
-            my @sub_functions = @{$inherited_functions{$key}};
-            print<<HERE;
-            <tr>
-              <td>Inherited Functions</td>
-            </tr>
-            @{[ map {
-                my $original_package_name = $_->original_package;
-                $original_package_name =~ s/::/__/g;
-            '<tr>' .
-              '<td>' .
-              '<a href="'. join('#', $original_package_name, $_->name) . '.html">' . join('::', $_->original_package, $_->name) . '</a>' .
-              '</td>' .
-            '</tr>'
-            } @sub_functions ]}
-            <tr>
-            </tr>
-HERE
-        }
+        $self->page_template->param(HAS_PUBLIC_FUNCTIONS => 1);
+        $self->page_template->param(
+            PUBLIC_FUNCTIONS => [ map { { FUNCTION_NAME => $_ } } $package->public_functions ]
+        );
     }
 }
 
@@ -189,36 +146,10 @@ sub write_private_functions
 {
     my ($self, $package) = @_;
     if ($package->private_functions > 0) {
-        my @local_functions = ();
-        my %inherited_functions = ();
-        foreach my $function ($package->private_functions) {
-            if ($function->package eq $package->package_name) {
-                push(@local_functions, $function);
-            } else {
-                push(@{$inherited_functions{$function->original_package}}, $function);
-            }
-        }
-
-
-#        foreach my $key (keys %inherited_functions) {
-#            my @sub_functions = @{$inherited_functions{$key}};
-#            print<<HERE;
-#            <tr>
-#              <td>Inherited Functions</td>
-#            </tr>
-#            @{[ map {
-#                my $original_package_name = $_->original_package;
-#                $original_package_name =~ s/::/__/g;
-#            '<tr>' .
-#              "<td name=\"@{[ $_->name ]}" id="@{[ $_->name ]}\">" .
-#              '<a href="'. join('#', $original_package_name, $_->name) . '.html">' . join('::', $_->original_package, $_->name) . '</a>' .
-#              '</td>' .
-#            '</tr>'
-#            } @sub_functions ]}
-#            <tr>
-#            </tr>
-#HERE
-#        }
+        $self->page_template->param(HAS_PRIVATE_FUNCTIONS => 1);
+        $self->page_template->param(
+            PRIVATE_FUNCTIONS => [ map { { FUNCTION_NAME => $_ } } $package->private_functions ]
+        );
     }
 }
 
@@ -257,10 +188,13 @@ May include numerous subsections (i.e., =head2, =head3, etc.).
 =head1 SUBROUTINES/METHODS
 
 =head2 init_writer
+    Sets up the template files to be used for output (uses HTML::Template)
 
 =head2 before_package
+    Initializes the HTML::Template object
 
 =head2 after_package
+    Finalizes the current template file and writes output
 
 =head2 write_package_description
 
