@@ -20,7 +20,7 @@ my $builder = Module::Build->new(
         'HTML::Template'     => 0,
         'Devel::Symdump'     => 0,
         'Sub::Signatures'    => 0,
-        'Class::MethodMaker' => 0,
+        'Class::Accessor'    => 0,
         'aliased'            => 0,
         'enum'               => 0,
     },

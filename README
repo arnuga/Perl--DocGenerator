@@ -26,7 +26,7 @@ The following CPAN libraries are required for this module to install:
     Devel::Symdump
     Module::Load
     Sub::Signatures
-    Class::MethodMaker
+    Class::Accessor
     aliased
     enum
 
