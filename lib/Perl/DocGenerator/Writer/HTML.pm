@@ -9,22 +9,20 @@ use Module::Info;
 use File::Spec;
 
 __PACKAGE__->mk_accessors(qw/
-    package_template_file
-    toc_template_file
     header_template_file
+    package_template_file
     footer_template_file
+    index_template_file
     page_template
-    toc_template
-    header_template
-    footer_template
-    pages
+    index_template
+    packages
 /);
 
 sub init_writer
 {
     my ($self) = @_;
 
-    $self->pages([]);
+    $self->packages([]);
     my $package_info = Module::Info->new_from_loaded(__PACKAGE__);
     if ($package_info) {
         my $base_template_dir = File::Spec->catfile(
@@ -40,11 +38,6 @@ sub init_writer
             $self->package_template_file($default_package_template_file);
         }
 
-        my $default_toc_template_file = File::Spec->catfile($base_template_dir, 'toc.tmpl');
-        if ($default_toc_template_file && -f $default_toc_template_file) {
-            $self->toc_template_file($default_toc_template_file);
-        }
-
         my $default_header_template_file = File::Spec->catfile($base_template_dir, 'header.tmpl');
         if ($default_header_template_file && -f $default_header_template_file) {
             $self->header_template_file($default_header_template_file);
@@ -54,35 +47,56 @@ sub init_writer
         if ($default_footer_template_file && -f $default_footer_template_file) {
             $self->footer_template_file($default_footer_template_file);
         }
+
+        my $default_index_template_file = File::Spec->catfile($base_template_dir, 'index.tmpl');
+        if ($default_index_template_file && -f $default_index_template_file) {
+            $self->index_template_file($default_index_template_file);
+        }
     } else {
         die "Unable to location physical html template files";
     }
 
     die "Missing one or more templates"
-        unless ($self->package_template_file
-             && $self->toc_template_file
-             && $self->header_template_file
-             && $self->footer_template_file);
+        unless ($self->header_template_file
+             && $self->package_template_file
+             && $self->footer_template_file
+             && $self->index_template_file);
 }
 
 sub before_package
 {
     my ($self, $package) = @_;
     $self->page_template(HTML::Template->new(filename => $self->package_template_file));
+    $self->_set_global_template_params($self->page_template);
 }
 
 sub after_package
 {
     my ($self, $package) = @_;
+
+    my @packages = @{$self->packages()};
+    push @packages, $package;
+    $self->packages([@packages]);
+
     if ($self->page_template) {
         my $page_output = $self->page_template->output();
-        my $package_name = $package->package_name;
-        $package_name =~ s/\:\:/_/g;
-        $package_name .= '.html';
-        open(FILE, ">$package_name") or die "Unable to create file $package_name: $!\n";
+        my $filename = $self->_filename_from_package_name($package->package_name);
+        open(FILE, ">$filename") or die "Unable to create file $filename: $!\n";
         print FILE $page_output;
-        close(FILE) or die "Unable to close file $package_name: $!\n";
+        close(FILE) or die "Unable to close file $filename: $!\n";
     }
+}
+
+sub before_finish
+{
+    my ($self) = @_;
+    $self->index_template(HTML::Template->new(filename => $self->index_template_file));
+    $self->_set_global_template_params($self->index_template);
+    $self->write_index();
+    my $index_output = $self->index_template->output();
+    open(FILE, ">index.html") or die "Unable to create file: index.html: $!\n";
+    print FILE $index_output;
+    close(FILE) or die "Unable to close index.html: $!\n";
 }
 
 sub write_package_description
@@ -141,7 +155,14 @@ sub write_public_functions
     if ($package->public_functions > 0) {
         $self->page_template->param(HAS_PUBLIC_FUNCTIONS => 1);
         $self->page_template->param(
-            PUBLIC_FUNCTIONS => [ map { { FUNCTION_NAME => $_->name() } } $package->public_functions ]
+            PUBLIC_FUNCTIONS => [
+                map {
+                    {
+                        FUNCTION_NAME => $_->name(),
+                        BASE_CLASS_FUNCTION_HREF => $self->_base_class_href_from_item($_),
+                        BASE_CLASS_FUNCTION_NAME => $self->_base_class_name_from_item($_),
+                    }
+                } $package->public_functions ]
         );
     }
 }
@@ -152,7 +173,14 @@ sub write_private_functions
     if ($package->private_functions > 0) {
         $self->page_template->param(HAS_PRIVATE_FUNCTIONS => 1);
         $self->page_template->param(
-            PRIVATE_FUNCTIONS => [ map { { FUNCTION_NAME => $_->name() } } $package->private_functions ]
+            PRIVATE_FUNCTIONS => [
+                map {
+                    {
+                        FUNCTION_NAME => $_->name(),
+                        BASE_CLASS_FUNCTION_HREF => $self->_base_class_href_from_item($_),
+                        BASE_CLASS_FUNCTION_NAME => $self->_base_class_name_from_item($_),
+                    }
+                } $package->private_functions ]
         );
     }
 }
@@ -160,6 +188,63 @@ sub write_private_functions
 sub write_extra_imbedded_pod
 {
 #    print "\n";
+}
+
+sub write_index
+{
+    my ($self) = @_;
+
+    my @packages = @{$self->packages()};
+    if (scalar @packages > 0) {
+        $self->index_template->param(
+            PACKAGES => [ map {
+                {
+                    PACKAGE_NAME => $_->package_name,
+                    PACKAGE_HREF => $self->_filename_from_package_name($_->package_name)
+                }
+            } @packages ]
+        );
+    }
+}
+
+sub _set_global_template_params
+{
+    my ($self, $template) = @_;
+    $template->param(PERL_DOCGENERATOR_VERSION => $Perl::DocGenerator::VERSION);
+#   0    1    2     3     4    5     6     7     8
+#  ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+
+    my ($sec, $min, $hr, $day, $mon, $year) = (localtime(time))[0..5];
+    $template->param(GENERATED_DATE => sprintf("%04d-%02d-%02d %02d:%02d:%02d", $year, $mon, $day, $hr, $min, $sec));
+}
+
+sub _filename_from_package_name
+{
+    my ($self, $package_name) = @_;
+    $package_name =~ s/\:\:/_/g;
+    $package_name .= '.html';
+    return $package_name;
+}
+
+sub _base_class_href_from_item
+{
+    my ($self, $item) = @_;
+    my $base_package_name = $self->_base_class_name_from_item($item);
+    if ($base_package_name) {
+        return $self->_filename_from_package_name($base_package_name);
+    }
+    return undef;
+}
+
+sub _base_class_name_from_item
+{
+    my ($self, $item) = @_;
+    if ($item) {
+        if ($item->package ne $item->original_package) {
+            return $item->original_package;
+        }
+    }
+    return undef;
 }
 
 1;
@@ -216,9 +301,86 @@ May include numerous subsections (i.e., =head2, =head3, etc.).
 
 =head2 write_extra_imbedded_pod
 
+=head2 write_index
+
+=head2 before_finish
+
 =head1 DIAGNOSTICS
 
 =head1 CONFIGURATION AND ENVIRONMENT
+
+The following templates exist and can be over-written by you.
+index.tmpl
+header.tmpl
+package.tmpl
+footer.tmpl
+
+Following is the list of each template file and what HTML::Template variables
+have been defined (and thus are available to you).
+
+Doc Generator HTML Template names:
+
+Global:
+VAR:
+    generated_date
+    perl_docgenerator_version
+
+Header:
+VAR:
+    prev_class_href
+    prev_class_href_name
+    next_class_href
+    next_class_href_name
+    index_href
+
+Footer:
+VAR:
+    prev_class_href
+    prev_class_href_name
+    next_class_href
+    next_class_href_name
+    index_href
+
+Index:
+VAR:
+    package_href
+    package_name
+
+LOOP:
+    packages
+
+Package:
+VAR:
+    package_name
+    base_class_name
+    package_pod
+    scalar
+    array
+    hash
+    io
+    function_name
+    function_pod
+    base_class_function_href
+    base_class_function_href_name
+
+BOOL:
+    has_base_classes
+    has_scalars
+    has_arrays
+    has_hashes
+    has_ios
+    has_public_functions
+    has_private_functions
+
+LOOP:
+    base_classes
+    scalars
+    arrays
+    hashes
+    ios
+    public_functions
+    private_functions
+
 
 =head1 DEPENDENCIES
 

@@ -114,6 +114,8 @@ May include numerous subsections (i.e., =head2, =head3, etc.).
 =head1 BUGS AND LIMITATIONS
 
 There are no known bugs in this module.
+Perl::DocGenerator does not support multiple packages defined
+inside the same file.  You would never do that anyway right?
 Please reports problems to David Shultz (djshultz@gmail.com)
 Patches are welcome.
 

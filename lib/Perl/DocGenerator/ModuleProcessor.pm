@@ -35,7 +35,7 @@ sub new
         if ($likely_module_name) {
             $package = $likely_module_name;
         } else {
-            die "Unable to determine module name from file: $package.  Maybe $package is not a real package?";
+            die "Unable to determine module name from file: $package.  Maybe $package is not a real package or is a mixin style module?";
         }
     }
     $self->package_name($package);

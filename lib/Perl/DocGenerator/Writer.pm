@@ -46,6 +46,10 @@ sub write_package
 
 sub finish
 {
+    my ($self) = @_;
+    if ($self->writer_obj->can('before_finish')) {
+        $self->writer_obj->before_finish();
+    }
 }
 
 sub _load_and_verify_writer
