@@ -6,21 +6,88 @@ use enum qw/
     :T_=0 SCALAR ARRAY HASH FUNCTION IOS PACKAGE BASE_CLASS
 /;
 
-require Class::Accessor;
 require Exporter;
 use vars qw/@ISA @EXPORT/;
-@ISA = qw/Exporter Class::Accessor/;
+@ISA = qw/Exporter/;
 @EXPORT = qw/T_SCALAR T_ARRAY T_HASH T_FUNCTION T_IOS T_PACKAGE T_BASE_CLASS/;
 
-__PACKAGE__->mk_accessors(qw/
-    obj object_type name full_name package original_package base_classes
-/);
-
-sub set
+sub new
 {
-    my ($self, $key) = splice(@_, 0, 2);
-    $self->SUPER::set($key, @_);
+    my ($class) = @_;
+    my $self = {
+        base_classes     => [],
+        full_name        => undef,
+        name             => undef,
+        object_type      => undef,
+        obj              => undef,
+        original_package => undef,
+        package          => undef,
+    };
+    bless $self, $class;
     return $self;
+}
+
+sub obj
+{
+    my ($self, $obj) = @_;
+    if ($obj) {
+        $self->{obj} = $obj;
+    }
+    return $self->{obj};
+}
+
+sub object_type
+{
+    my ($self, $object_type) = @_;
+    if ($object_type) {
+        $self->{object_type} = $object_type;
+    }
+    return $self->{object_type};
+}
+
+sub name
+{
+    my ($self, $name) = @_;
+    if ($name) {
+        $self->{name} = $name;
+    }
+    return $self->{name};
+}
+
+sub full_name
+{
+    my ($self, $full_name) = @_;
+    if ($full_name) {
+        $self->{full_name} = $full_name;
+    }
+    return $self->{full_name};
+}
+
+sub package
+{
+    my ($self, $package) = @_;
+    if ($package) {
+        $self->{package} = $package;
+    }
+    return $self->{package};
+}
+
+sub original_package
+{
+    my ($self, $original_package) = @_;
+    if ($original_package) {
+        $self->{original_package} = $original_package;
+    }
+    return $self->{original_package};
+}
+
+sub base_classes
+{
+    my ($self, @base_classes) = @_;
+    if (@base_classes) {
+        $self->{base_classes} = [ @base_classes ];
+    }
+    return @{$self->{base_classes}};
 }
 
 1;
@@ -54,7 +121,21 @@ May include numerous subsections (i.e., =head2, =head3, etc.).
 
 =head1 SUBROUTINES/METHODS
 
-=head2 set
+=head2 new
+
+=head2 base_classes
+
+=head2 full_name
+
+=head2 name
+
+=head2 object_type
+
+=head2 obj
+
+=head2 original_package
+
+=head2 package
 
 =head1 DIAGNOSTICS
 

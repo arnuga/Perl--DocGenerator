@@ -3,26 +3,100 @@ package Perl::DocGenerator::Writer::HTML;
 use strict;
 
 use base qw/Perl::DocGenerator::Writer/;
-use Module::Load;
 use HTML::Template;
 use Module::Info;
 use File::Spec;
 
-__PACKAGE__->mk_accessors(qw/
-    header_template_file
-    package_template_file
-    footer_template_file
-    index_template_file
-    page_template
-    index_template
-    packages
-/);
+sub new
+{
+    my ($class) = @_;
+    my $self = {
+        footer_template_file  => undef,
+        header_template_file  => undef,
+        index_template_file   => undef,
+        index_template        => undef,
+        packages              => [],
+        package_template_file => undef,
+        page_template         => undef,
+    };
+
+    bless $self, $class;
+    return $self;
+}
+
+sub footer_template_file
+{
+    my ($self, $footer_template_file) = @_;
+    if ($footer_template_file) {
+        $self->{footer_template_file} = $footer_template_file;
+    }
+    return $self->{footer_template_file};
+}
+
+sub header_template_file
+{
+    my ($self, $header_template_file) = @_;
+    if ($header_template_file) {
+        $self->{header_template_file} = $header_template_file;
+    }
+
+    return $self->{header_template_file};
+}
+
+sub index_template_file
+{
+    my ($self, $index_template_file) = @_;
+    if ($index_template_file) {
+        $self->{index_template_file} = $index_template_file;
+    }
+
+    return $self->{index_template_file};
+}
+
+sub index_template
+{
+    my ($self, $index_template) = @_;
+    if ($index_template) {
+        $self->{index_template} = $index_template;
+    }
+
+    return $self->{index_template};
+}
+
+sub packages
+{
+    my ($self, @packages) = @_;
+    if (@packages) {
+        $self->{packages} = [ @packages ];
+    }
+
+    return @{$self->{packages}};
+}
+
+sub package_template_file
+{
+    my ($self, $package_template_file) = @_;
+    if ($package_template_file) {
+        $self->{package_template_file} = $package_template_file;
+    }
+
+    return $self->{package_template_file};
+}
+
+sub page_template
+{
+    my ($self, $page_template) = @_;
+    if ($page_template) {
+        $self->{page_template} = $page_template;
+    }
+
+    return $self->{page_template};
+}
 
 sub init_writer
 {
     my ($self) = @_;
 
-    $self->packages([]);
     my $package_info = Module::Info->new_from_loaded(__PACKAGE__);
     if ($package_info) {
         my $base_template_dir = File::Spec->catfile(
@@ -74,9 +148,9 @@ sub after_package
 {
     my ($self, $package) = @_;
 
-    my @packages = @{$self->packages()};
+    my @packages = $self->packages();
     push @packages, $package;
-    $self->packages([@packages]);
+    $self->packages(@packages);
 
     if ($self->page_template) {
         my $page_output = $self->page_template->output();
@@ -194,7 +268,7 @@ sub write_index
 {
     my ($self) = @_;
 
-    my @packages = @{$self->packages()};
+    my @packages = $self->packages();
     if (scalar @packages > 0) {
         $self->index_template->param(
             PACKAGES => [ map {
@@ -275,6 +349,22 @@ May include numerous subsections (i.e., =head2, =head3, etc.).
 
 
 =head1 SUBROUTINES/METHODS
+
+=head2 new
+
+=head2 footer_template_file
+
+=head2 header_template_file
+
+=head2 index_template_file
+
+=head2 index_template
+
+=head2 packages
+
+=head2 package_template_file
+
+=head2 page_template
 
 =head2 init_writer
     Sets up the template files to be used for output (uses HTML::Template)

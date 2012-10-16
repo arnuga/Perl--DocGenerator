@@ -23,12 +23,15 @@ already?
 INSTALLATION
 
 The following CPAN libraries are required for this module to install:
-    Devel::Symdump
-    Module::Load
-    Sub::Signatures
-    Class::Accessor
     aliased
+    Devel::Symdump
     enum
+    File::Find
+    File::Spec
+    HTML::Template
+    Module::Info
+    Module::Load
+
 
 To install this module, run the following commands:
 

@@ -4,6 +4,16 @@ use strict;
 
 use base qw/Perl::DocGenerator::Writer/;
 
+sub new
+{
+    my ($class) = @_;
+    my $self = {
+    };
+
+    bless $self, $class;
+    return $self;
+}
+
 sub write_package_description
 {
     my ($self, $package) = @_;
@@ -11,26 +21,6 @@ sub write_package_description
     Package: @{[ $package->package_name ]}
 HERE
 
-#    my @local_functions = ();
-#    my %inherited_functions = ();
-#    foreach my $function ($package->functions) {
-#        if ($function->original_package eq $package->package_name) {
-#            push @local_functions, $function;
-#        } else {
-#            push @{$inherited_functions{$function->original_package}}, $function;
-#        }
-#    }
-#
-#    map { print "\tFunction: @{[ $_->name ]}\n" } @local_functions;
-#
-#    foreach my $sub_class (keys %inherited_functions) {
-#        my @inherited_funcs = @{$inherited_functions{$sub_class}};
-#        print "\tInherited Functions from base class: $sub_class\n";
-#        foreach my $inherited_func (@inherited_funcs) {
-#            next if ($inherited_func->name =~ /^_/);
-#            print "\t\tFunction: @{[ $inherited_func->name ]} [@{[ $inherited_func->original_package ]}::@{[ $inherited_func->name ]}]\n";
-#        }
-#    }
 }
 
 sub write_scalars
@@ -160,6 +150,8 @@ May include numerous subsections (i.e., =head2, =head3, etc.).
 
 
 =head1 SUBROUTINES/METHODS
+
+=head2 new
 
 =head2 write_package_description
 

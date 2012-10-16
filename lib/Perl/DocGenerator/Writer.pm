@@ -3,21 +3,46 @@ package Perl::DocGenerator::Writer;
 use strict;
 
 use Module::Load;
-use base qw/Class::Accessor/;
 
-__PACKAGE__->mk_accessors(qw/
-    recurse
-    writer_class
-    writer_obj
-/);
+sub new
+{
+    my ($class) = @_;
+    my $self = {
+        writer_class => undef,
+        writer_obj   => undef,
+    };
+
+    bless $self, $class;
+    return $self;
+}
+
+sub writer_class
+{
+    my ($self, $writer_class) = @_;
+    if ($writer_class) {
+        $self->{writer_class} = $writer_class;
+    }
+    return $self->{writer_class};
+}
+
+sub writer_obj
+{
+    my ($self, $writer_obj) = @_;
+    if ($writer_obj) {
+        $self->{writer_obj} = $writer_obj;
+    }
+    return $self->{writer_obj};
+}
 
 sub initialize_writer
 {
     my ($self) = @_;
-    $self->writer_class || $self->writer_class('Perl::DocGenerator::Writer::Screen');
+    if (! $self->writer_class()) {
+        $self->writer_class('Perl::DocGenerator::Writer::Screen');
+    }
     if ($self->_load_and_verify_writer()) {
-        if ($self->writer_obj && $self->writer_obj->can('init_writer')) {
-            $self->writer_obj->init_writer();
+        if ($self->writer_obj() && $self->writer_obj()->can('init_writer')) {
+            $self->writer_obj()->init_writer();
         }
         return 1;
     }
@@ -27,28 +52,28 @@ sub initialize_writer
 sub write_package
 {
     my ($self, $package_obj) = splice(@_, 0, 2);
-    if ($self->writer_obj->can('before_package')) {
-        $self->writer_obj->before_package($package_obj);
+    if ($self->writer_obj()->can('before_package')) {
+        $self->writer_obj()->before_package($package_obj);
     }
-    $self->writer_obj->write_package_description($package_obj);
-    $self->writer_obj->write_scalars($package_obj);
-    $self->writer_obj->write_arrays($package_obj);
-    $self->writer_obj->write_hashes($package_obj);
-    $self->writer_obj->write_ios($package_obj);
-    $self->writer_obj->write_public_functions($package_obj);
-    $self->writer_obj->write_private_functions($package_obj);
-    $self->writer_obj->write_extra_imbedded_pod($package_obj);
+    $self->writer_obj()->write_package_description($package_obj);
+    $self->writer_obj()->write_scalars($package_obj);
+    $self->writer_obj()->write_arrays($package_obj);
+    $self->writer_obj()->write_hashes($package_obj);
+    $self->writer_obj()->write_ios($package_obj);
+    $self->writer_obj()->write_public_functions($package_obj);
+    $self->writer_obj()->write_private_functions($package_obj);
+    $self->writer_obj()->write_extra_imbedded_pod($package_obj);
 
-    if ($self->writer_obj->can('after_package')) {
-        $self->writer_obj->after_package($package_obj);
+    if ($self->writer_obj()->can('after_package')) {
+        $self->writer_obj()->after_package($package_obj);
     }
 }
 
 sub finish
 {
     my ($self) = @_;
-    if ($self->writer_obj->can('before_finish')) {
-        $self->writer_obj->before_finish();
+    if ($self->writer_obj()->can('before_finish')) {
+        $self->writer_obj()->before_finish();
     }
 }
 
@@ -56,14 +81,14 @@ sub _load_and_verify_writer
 {
     my ($self) = @_;
 
-    if ($self->writer_class) {
-        eval { load($self->writer_class) };
+    if ($self->writer_class()) {
+        eval { load($self->writer_class()) };
         if (my $err = $@) {
-            die "Ah, can't load writer class @{[ $self->writer_class ]}: $err";
+            die "Ah, can't load writer class @{[ $self->writer_class() ]}: $err";
         }
 
         eval {
-            my $writer_obj = $self->writer_class->new;
+            my $writer_obj = $self->writer_class()->new;
             foreach my $required_method (qw/write_package_description
                                             write_scalars
                                             write_arrays
@@ -111,6 +136,12 @@ May include numerous subsections (i.e., =head2, =head3, etc.).
 
 
 =head1 SUBROUTINES/METHODS
+
+=head2 new
+
+=head2 writer_class
+
+=head2 writer_obj
 
 =head2 initialize_writer
 

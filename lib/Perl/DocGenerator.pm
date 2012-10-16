@@ -1,71 +1,124 @@
-package Perl::DocGenerator;
-
+package Perl::DocGenerator; 
 use 5.006;
 use strict;
 use warnings;
 
 our $VERSION = '0.02';
 
-use base qw/Class::Accessor/;
-
-__PACKAGE__->mk_accessors(qw/
-    recursive
-    folders
-    packages
-/);
-
 use Perl::DocGenerator::ModuleProcessor;
 use Perl::DocGenerator::Writer;
-use File::Spec;
+use File::Find;
 
-our @loaded_packages = ();
-
-sub set
+sub new
 {
-    my ($self, $key) = splice(@_, 0, 2);
-    $self->SUPER::set($key, @_);
-
+    my ($class) = @_;
+    my $self = {
+        folders         => [],
+        loaded_packages => [],
+        packages        => [],
+        recursive       => undef,
+    };
+    bless $self, $class;
     return $self;
+}
+
+sub recursive
+{
+    my ($self, $is_recursive) = @_;
+    if ($is_recursive) {
+        $self->{recursive} = $is_recursive;
+    }
+    return $self->{recursive};
+}
+
+sub folders
+{
+    my ($self, @folders) = @_;
+    if (@folders > 0) {
+        $self->{folders} = [@folders];
+    }
+    return @{$self->{folders}};
+}
+
+sub packages
+{
+    my ($self, @packages) = @_;
+    if (@packages > 0) {
+        $self->{packages} = [@packages];
+    }
+    return @{$self->{packages}};
+}
+
+sub loaded_packages
+{
+    my ($self, @loaded_packages) = @_;
+    if (@loaded_packages > 0) {
+        $self->{loaded_packages} = [ @loaded_packages ];
+    }
+
+    return @{$self->{loaded_packages}};
 }
 
 sub scan_packages
 {
     my ($self, @packages) = @_;
-    my @locations = grep { defined $_ } ($self->folders, $self->packages, @packages);
-    
-    # translate folder paths into perl files at said path(s)
-    my @new_locations;
-    foreach my $location (@locations) {
-       if ($location !~ /\.pm$/) {
-           my @perl_packages_at_location = glob(File::Spec->catfile($location, '*.pm'));
-           push @new_locations, @perl_packages_at_location if (@perl_packages_at_location > 0);
-           pop @locations; # remove this item from the locations list
-       }
-    }
-    push @locations, @new_locations;
+    my @locations = grep { defined $_ } ($self->folders(), $self->packages(), @packages);
+    $self->_find_perl_modules_at_locations(@locations); 
 
-    foreach my $location (@locations) {
+    no warnings;
+    print "Scanning packages...";
+    foreach my $location ($self->packages()) {
         if ($location) {
-            print "Scanning $location\n";
             my $mod_proc;
-            eval { $mod_proc = Perl::DocGenerator::ModuleProcessor->new($location, $self->recursive); };
+            eval { $mod_proc = Perl::DocGenerator::ModuleProcessor->new($location, $self->recursive()); };
             if ($mod_proc) {
+                my @loaded_packages = $self->loaded_packages();
                 push(@loaded_packages, $mod_proc);
+                $self->loaded_packages(@loaded_packages);
             }
         }
     }
+    print "done\n";
 }
 
 sub output
 {
     my ($self, $writer_class) = @_;
 
-    my $writer = Perl::DocGenerator::Writer->new({writer_class => $writer_class});
+    my $writer = Perl::DocGenerator::Writer->new();
+    if ($writer_class) {
+        $writer->writer_class($writer_class);
+    }
     $writer->initialize_writer();
-    foreach my $package (@loaded_packages) {
+    print "Writing packages...";
+    foreach my $package ($self->loaded_packages()) {
         $writer->write_package($package);
     }
     $writer->finish;
+    print "done\n";
+}
+
+sub _find_perl_modules_at_locations
+{
+    my ($self, @locations) = @_;
+#    if (! $self->recursive()) {
+#        $File::Find::prune = 1; #disable recursive scanning
+#    }
+    print "Scanning for packages...";
+    find(sub { $self->_perl_files_in_folder($File::Find::name) }, @locations);
+    print "done\n";
+}
+
+sub _perl_files_in_folder
+{
+    my ($self, $filename) = @_;
+    if ($filename =~ /\.pm$/) {
+        my $dir = $File::Find::dir;
+
+        my @packages = $self->packages();
+        push @packages, $filename;
+        $self->packages(@packages);
+    }
 }
 
 1;
@@ -92,7 +145,15 @@ May include numerous subsections (i.e., =head2, =head3, etc.).
 
 =head1 SUBROUTINES/METHODS
 
-=head2 set
+=head2 new
+
+=head2 recursive
+
+=head2 folders
+
+=head2 packages
+
+=head2 loaded_packages
 
 =head2 scan_packages
 
