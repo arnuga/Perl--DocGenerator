@@ -17,6 +17,7 @@ sub new
     my $self = {
         base_classes     => [],
         full_name        => undef,
+	is_overridden    => undef,
         name             => undef,
         object_type      => undef,
         obj              => undef,
@@ -61,6 +62,15 @@ sub full_name
         $self->{full_name} = $full_name;
     }
     return $self->{full_name};
+}
+
+sub is_overridden
+{
+	my ($self, $is_overridden) = @_;
+	if ($is_overridden) {
+		$self->{is_overridden} = $is_overridden eq 'Y' ? 1 : undef;
+	}
+	return $self->{is_overridden} ? 'Y' : 'N';
 }
 
 sub package
@@ -126,6 +136,8 @@ May include numerous subsections (i.e., =head2, =head3, etc.).
 =head2 base_classes
 
 =head2 full_name
+
+=head2 is_overridden
 
 =head2 name
 

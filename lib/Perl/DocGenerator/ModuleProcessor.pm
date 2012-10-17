@@ -21,7 +21,6 @@ sub new
     };
     bless $self, $class;
 
-
     eval { load($package) };
     if (my $err = $@) {
         #warn "Unable to load package '$package': $err";
@@ -138,9 +137,17 @@ sub functions
         }
 
             foreach my $base_class ($self->base_classes) {
-            my @base_items = $self->_module_for_package($base_class->name)->functions();
-            @base_items = $self->_unique_items_from_first_list(\@base_items, \@return_functions);
-            push(@return_functions, @base_items);
+            my @base_functions = $self->_module_for_package($base_class->name)->functions();
+			foreach my $base_function (@base_functions) {
+				foreach my $function (@return_functions) {
+					if ($base_function->name() eq $function->name()) {
+						$function->original_package($base_function->package());
+						$function->is_overridden('Y');
+					}
+				}
+			}
+            @base_functions = $self->_unique_items_from_first_list(\@base_functions, \@return_functions);
+            push(@return_functions, @base_functions);
         }
 
         $self->{package_functions} = [@return_functions];
