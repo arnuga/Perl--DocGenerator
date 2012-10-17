@@ -4,6 +4,16 @@ use strict;
 
 sub writer {}
 
+sub new
+{
+    my ($class) = @_;
+    my $self = {
+    };
+
+    bless $self, $class;
+    return $self;
+}
+
 1;
 
 =head1 NAME
@@ -32,6 +42,8 @@ May include numerous subsections (i.e., =head2, =head3, etc.).
 
 
 =head1 SUBROUTINES/METHODS
+
+=head2 new
 
 =head2 writer
 
