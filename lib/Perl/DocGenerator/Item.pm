@@ -17,7 +17,7 @@ sub new
     my $self = {
         base_classes     => [],
         full_name        => undef,
-	is_overridden    => undef,
+	    is_overridden    => undef,
         name             => undef,
         object_type      => undef,
         obj              => undef,

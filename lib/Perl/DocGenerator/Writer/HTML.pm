@@ -233,6 +233,7 @@ sub write_public_functions
                 map {
                     {
                         FUNCTION_NAME => $_->name(),
+                        FUNCTION_OVERRIDDEN => $_->is_overridden(),
                         BASE_CLASS_FUNCTION_HREF => $self->_base_class_href_from_item($_),
                         BASE_CLASS_FUNCTION_NAME => $self->_base_class_name_from_item($_),
                     }
@@ -251,6 +252,7 @@ sub write_private_functions
                 map {
                     {
                         FUNCTION_NAME => $_->name(),
+                        FUNCTION_OVERRIDDEN => $_->is_overridden(),
                         BASE_CLASS_FUNCTION_HREF => $self->_base_class_href_from_item($_),
                         BASE_CLASS_FUNCTION_NAME => $self->_base_class_name_from_item($_),
                     }
