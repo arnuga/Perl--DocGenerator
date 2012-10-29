@@ -232,12 +232,21 @@ sub write_public_functions
             PUBLIC_FUNCTIONS => [
                 map {
                     {
+                        FUNCTION_NAME_ANCHOR_HREF => '#' . $_->anchor_href(),
                         FUNCTION_NAME => $_->name(),
                         FUNCTION_OVERRIDDEN => $_->is_overridden(),
                         BASE_CLASS_FUNCTION_HREF => $self->_base_class_href_from_item($_),
                         BASE_CLASS_FUNCTION_NAME => $self->_base_class_name_from_item($_),
                     }
                 } $package->public_functions ]
+        );
+
+        $self->page_template->param(
+            PUBLIC_FUNCTION_PODS => [
+                map {
+                    { FUNCTION_NAME => $_->name() }
+                } $package->public_functions
+            ]
         );
     }
 }
@@ -251,12 +260,21 @@ sub write_private_functions
             PRIVATE_FUNCTIONS => [
                 map {
                     {
+                        FUNCTION_NAME_ANCHOR_HREF => '#' . $_->anchor_href(),
                         FUNCTION_NAME => $_->name(),
                         FUNCTION_OVERRIDDEN => $_->is_overridden(),
                         BASE_CLASS_FUNCTION_HREF => $self->_base_class_href_from_item($_),
                         BASE_CLASS_FUNCTION_NAME => $self->_base_class_name_from_item($_),
                     }
                 } $package->private_functions ]
+        );
+
+        $self->page_template->param(
+            PRIVATE_FUNCTION_PODS => [
+                map {
+                    { FUNCTION_NAME => $_->name() }
+                } $package->private_functions
+            ]
         );
     }
 }
@@ -287,10 +305,7 @@ sub _set_global_template_params
 {
     my ($self, $template) = @_;
     $template->param(PERL_DOCGENERATOR_VERSION => $Perl::DocGenerator::VERSION);
-#   0    1    2     3     4    5     6     7     8
-#  ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
-
-    my ($sec, $min, $hr, $day, $mon, $year) = (localtime(time))[0..5];
+    my ($year, $mon, $day, $hr, $min, $sec) = $self->_get_date_and_time_array();
     $template->param(GENERATED_DATE => sprintf("%04d-%02d-%02d %02d:%02d:%02d", $year, $mon, $day, $hr, $min, $sec));
 }
 
@@ -451,7 +466,6 @@ VAR:
     hash
     io
     function_name
-    function_pod
     base_class_function_href
     base_class_function_href_name
 

@@ -133,6 +133,7 @@ sub functions
             $item_obj->package($self->package_name());
             $item_obj->original_package($self->package_name());
             $item_obj->full_name(join('::', $self->package_name(), $function));
+            $item_obj->anchor_href(uc($function));
             push(@return_functions, $item_obj);
         }
 

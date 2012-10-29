@@ -23,6 +23,7 @@ sub new
         obj              => undef,
         original_package => undef,
         package          => undef,
+        anchor_href      => undef,
     };
     bless $self, $class;
     return $self;
@@ -71,6 +72,16 @@ sub is_overridden
 		$self->{is_overridden} = $is_overridden eq 'Y' ? 1 : undef;
 	}
 	return $self->{is_overridden} ? 'Y' : 'N';
+}
+
+sub anchor_href
+{
+    my ($self, $anchor_href) = @_;
+    if ($anchor_href) {
+        $self->{anchor_href} = $anchor_href;
+    }
+
+    return $self->{anchor_href};
 }
 
 sub package
@@ -138,6 +149,8 @@ May include numerous subsections (i.e., =head2, =head3, etc.).
 =head2 full_name
 
 =head2 is_overridden
+
+=head2 anchor_href
 
 =head2 name
 

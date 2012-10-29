@@ -18,7 +18,7 @@ use Perl::DocGenerator::ModuleProcessor;
     my $num_functions = scalar @functions;
 
     cmp_ok($num_functions, '==', 1);
-    cmp_ok($functions[0]->name, 'eq', 'new');
+    cmp_ok($functions[0]->name, 'eq', 'my_cool_function');
     # this function is inherited from Bar class
     cmp_ok($functions[0]->package, 'eq', 'Child');
     cmp_ok($functions[0]->original_package, 'eq', 'Parent');

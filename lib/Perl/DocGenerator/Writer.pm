@@ -107,6 +107,14 @@ sub _load_and_verify_writer
     return 1;
 }
 
+sub _get_date_and_time_array()
+{
+    my ($sec, $min, $hr, $day, $mon, $year) = (localtime(time))[0..5];
+    $year += 1900; # really perl, you're datetime code really sucks
+
+    return ($year, $mon, $day, $hr, $min, $sec);
+}
+
 1;
 
 
@@ -156,6 +164,8 @@ May include numerous subsections (i.e., =head2, =head3, etc.).
 =head2 finish
 
 =head2 _load_and_verify_writer
+
+=head2 _get_date_and_time_array
 
 =head1 DIAGNOSTICS
 

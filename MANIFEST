@@ -21,6 +21,7 @@ t/01-basics.t
 t/02-inheritance.t
 t/03-writer.t
 t/04-overridden-functions.t
+t/05-calculates-year-correctly.t
 t/manifest.t
 t/pod-coverage.t
 t/pod.t

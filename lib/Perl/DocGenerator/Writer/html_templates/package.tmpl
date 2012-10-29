@@ -71,14 +71,12 @@ extends <TMPL_VAR NAME=BASE_CLASS_NAME>
   </tr> 
   <tr> 
     <td><b>Function Name</b></td> 
-    <td><b>Details</b></td> 
     <td><b>Is Overridden</b></td>
     <td><b>Inherited From</b></td> 
   </tr> 
   <TMPL_LOOP NAME=PUBLIC_FUNCTIONS> 
   <tr> 
-    <td><TMPL_VAR NAME=FUNCTION_NAME></td> 
-    <td><TMPL_VAR NAME=FUNCTION_POD></td> 
+    <td><a href="<TMPL_VAR NAME=FUNCTION_NAME_ANCHOR_HREF>"><TMPL_VAR NAME=FUNCTION_NAME></a></td>
     <td><TMPL_VAR NAME=FUNCTION_OVERRIDDEN></td>
    <td><a href="<TMPL_VAR NAME=BASE_CLASS_FUNCTION_HREF>"><TMPL_VAR NAME=BASE_CLASS_FUNCTION_NAME></a></td> 
   </tr> 
@@ -90,14 +88,12 @@ extends <TMPL_VAR NAME=BASE_CLASS_NAME>
   </tr> 
   <tr> 
     <td><b>Function Name</b></td> 
-    <td><b>Details</b></td> 
     <td><b>Is Overridden</b></td>
     <td><b>Inherited From</b></td> 
   </tr> 
   <TMPL_LOOP NAME=PRIVATE_FUNCTIONS> 
   <tr> 
-    <td><TMPL_VAR NAME=FUNCTION_NAME></td> 
-    <td><TMPL_VAR NAME=FUNCTION_POD></td> 
+    <td><a href="<TMPL_VAR NAME=FUNCTION_NAME_ANCHOR_HREF>"><TMPL_VAR NAME=FUNCTION_NAME></a></td>
     <td><TMPL_VAR NAME=FUNCTION_OVERRIDDEN></td>
     <td><a href="<TMPL_VAR NAME=BASE_CLASS_FUNCTION_HREF>"><TMPL_VAR NAME=BASE_CLASS_FUNCTION_NAME></a></td> 
   </tr> 
@@ -105,5 +101,21 @@ extends <TMPL_VAR NAME=BASE_CLASS_NAME>
 </TMPL_IF> 
 </table> 
 <hr /> 
+<table>
+  <TMPL_LOOP NAME=PUBLIC_FUNCTION_PODS>
+  <tr>
+    <td>
+      <a name="<TMPL_VAR NAME=FUNCTION_NAME>"><TMPL_VAR NAME=FUNCTION_NAME></a>
+    </td>
+  </tr>
+  </TMPL_LOOP>
+  <TMPL_LOOP NAME=PRIVATE_FUNCTION_PODS>
+  <tr>
+    <td>
+      <a name="<TMPL_VAR NAME=FUNCTION_NAME>"><TMPL_VAR NAME=FUNCTION_NAME></a>
+    </td>
+  </tr>
+  </TMPL_LOOP>
+</table>
 <TMPL_INCLUDE NAME="footer.tmpl">
 </html> 

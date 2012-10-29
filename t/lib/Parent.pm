@@ -2,6 +2,6 @@ package Parent;
 
 use strict;
 
-sub new { }
+sub my_cool_function { }
 
 1;
