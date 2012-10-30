@@ -31,6 +31,7 @@ The following CPAN libraries are required for this module to install:
     HTML::Template
     Module::Info
     Module::Load
+    Pod::POM
 
 
 To install this module, run the following commands:

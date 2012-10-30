@@ -8,6 +8,7 @@ require Devel::Symdump;
 
 use Module::Load;
 use aliased 'Perl::DocGenerator::Item';
+use aliased 'Perl::DocGenerator::PodReader';
 
 our $VERSION = '0.01';
 
@@ -15,15 +16,18 @@ sub new
 {
     my ($class, $package) = @_;
     my $self = {
+        original_filename => $package,
         obj               => undef,
         package_functions => undef,
         package_name      => undef,
+        pod               => undef,
     };
     bless $self, $class;
 
     eval { load($package) };
     if (my $err = $@) {
-        #warn "Unable to load package '$package': $err";
+        warn "Unable to load package '$package': $err";
+        return;
     }
 
     if ($package =~ /\.pm$/) {
@@ -36,6 +40,7 @@ sub new
     }
     $self->package_name($package);
     $self->obj(Devel::Symdump->new($package));
+    $self->pod(PodReader->new($self->original_filename));
 
     return $self;
 }
@@ -164,6 +169,16 @@ sub obj
         $self->{obj} = $obj;
     }
     return $self->{obj};
+}
+
+sub pod
+{
+    my ($self, $pod) = @_;
+    if ($pod) {
+        $self->{pod} = $pod;
+    }
+
+    return $self->{pod};
 }
 
 sub private_functions
@@ -301,6 +316,15 @@ sub _module_name_from_filename
     return undef;
 }
 
+sub original_filename
+{
+    my ($self, $original_filename) = @_;
+    if ($original_filename) {
+        $self->{original_filename} = $original_filename;
+    }
+    return $self->{original_filename};
+}
+
 1;
 
 __END__
@@ -336,6 +360,8 @@ May include numerous subsections (i.e., =head2, =head3, etc.).
 
 =head2 obj
 
+=head2 pod
+
 =head2 package_name
 
 =head2 base_classes
@@ -357,6 +383,8 @@ May include numerous subsections (i.e., =head2, =head3, etc.).
 =head2 ios
 
 =head2 set
+
+=head2 original_filename
 
 =head1 DIAGNOSTICS
 

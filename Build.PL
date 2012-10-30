@@ -22,6 +22,7 @@ my $builder = Module::Build->new(
         'HTML::Template'     => 0,
         'Module::Info'       => 0,
         'Module::Load'       => 0,
+        'Pod::POM'           => 0,
     },
     add_to_cleanup     => [ 'Perl-DocGenerator-*' ],
     create_makefile_pl => 'traditional',

@@ -1,24 +1,31 @@
 <html> 
+<head>
+<style type="text/css">
+a:link {
+    text-decoration: none;
+}
+</style>
+</head>
 <TMPL_INCLUDE NAME="header.tmpl">
 <hr /> 
 <h2>Package <TMPL_VAR NAME=PACKAGE_NAME></h2> 
 <br /> 
-<pre> 
 <TMPL_IF NAME=HAS_BASE_CLASSES> 
+<pre>
 <TMPL_LOOP NAME=BASE_CLASSES> 
 <b><TMPL_VAR NAME=BASE_CLASS_NAME></b> 
 </TMPL_LOOP> 
   |
   +--<b><TMPL_VAR NAME=PACKAGE_NAME></b> 
+</pre>
 <TMPL_ELSE> 
 <b><TMPL_VAR NAME=PACKAGE_NAME></b> 
 </TMPL_IF> 
-</pre> 
 <hr /> 
-public Package <TMPL_VAR NAME=PACKAGE_NAME> 
+Public Package <TMPL_VAR NAME=PACKAGE_NAME> 
 <TMPL_IF NAME=HAS_BASE_CLASSES> 
-<TMPL_LOOP NAME=BASE_CLASSES> 
-extends <TMPL_VAR NAME=BASE_CLASS_NAME> 
+<TMPL_LOOP NAME=BASE_CLASSES><br />
+&nbsp;&nbsp;&nbsp;&nbsp;extends <TMPL_VAR NAME=BASE_CLASS_NAME> 
 </TMPL_LOOP> 
 </TMPL_IF> 
  
@@ -101,21 +108,25 @@ extends <TMPL_VAR NAME=BASE_CLASS_NAME>
 </TMPL_IF> 
 </table> 
 <hr /> 
-<table>
   <TMPL_LOOP NAME=PUBLIC_FUNCTION_PODS>
+<table width="100%">
   <tr>
     <td>
       <a name="<TMPL_VAR NAME=FUNCTION_NAME>"><TMPL_VAR NAME=FUNCTION_NAME></a>
     </td>
   </tr>
+</table>
+<hr />
   </TMPL_LOOP>
   <TMPL_LOOP NAME=PRIVATE_FUNCTION_PODS>
+<table width="100%">
   <tr>
     <td>
       <a name="<TMPL_VAR NAME=FUNCTION_NAME>"><TMPL_VAR NAME=FUNCTION_NAME></a>
     </td>
   </tr>
-  </TMPL_LOOP>
 </table>
+<hr />
+  </TMPL_LOOP>
 <TMPL_INCLUDE NAME="footer.tmpl">
 </html> 

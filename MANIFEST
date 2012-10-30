@@ -3,6 +3,7 @@ Changes
 lib/Perl/DocGenerator.pm
 lib/Perl/DocGenerator/ModuleProcessor.pm
 lib/Perl/DocGenerator/Item.pm
+lib/Perl/DocGenerator/PodReader.pm
 lib/Perl/DocGenerator/Writer.pm
 lib/Perl/DocGenerator/Writer/HTML.pm
 lib/Perl/DocGenerator/Writer/html_templates/index.tmpl
@@ -15,6 +16,7 @@ lib/Perl/DocGenerator/Writer/Screen.pm
 lib/Perl/DocGenerator/Writer/XML.pm
 MANIFEST			This list of files
 README
+TODO
 ignore.txt
 t/00-load.t
 t/01-basics.t
@@ -22,6 +24,7 @@ t/02-inheritance.t
 t/03-writer.t
 t/04-overridden-functions.t
 t/05-calculates-year-correctly.t
+t/06-parse_pod_docs.t
 t/manifest.t
 t/pod-coverage.t
 t/pod.t

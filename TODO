@@ -1,0 +1,2 @@
+Check for and record any POD on a per class, perl function basis
+Parse functions to *try* to determine passed in variables

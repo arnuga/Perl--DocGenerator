@@ -1,4 +1,10 @@
 Revision history for Perl-DocGenerator
+0.02    October 29th, 2012/17:09 PM PST
+        Added first draft PodReader class to parse and extract POD docs
+        for each Package processed.
+        Fixed a date mistake on output in HTML docs
+        Fixed a layout bug in the HTML output
+        Added Anchor tags for all public/private methods on HTML output
 
 0.02    October 12th, 2012/14:11 PM PST
         Fixed up the HTML template tests

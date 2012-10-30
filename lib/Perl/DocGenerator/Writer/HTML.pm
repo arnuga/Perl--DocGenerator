@@ -177,6 +177,17 @@ sub write_package_description
 {
     my ($self, $package) = @_;
     $self->page_template->param(PACKAGE_NAME => $package->package_name);
+    my @base_classes = $package->base_classes();
+    $self->page_template->param(HAS_BASE_CLASSES => scalar @base_classes);
+    if (@base_classes) {
+        $self->page_template->param(
+            BASE_CLASSES => [
+                map {
+                    { BASE_CLASS_NAME => $_->name() }
+                } @base_classes
+            ]
+        );
+    }
 }
 
 sub write_scalars
