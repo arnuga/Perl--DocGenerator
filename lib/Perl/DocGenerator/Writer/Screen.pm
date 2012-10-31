@@ -117,7 +117,7 @@ sub write_private_functions
     }
 }
 
-sub write_extra_imbedded_pod
+sub write_imbedded_pod
 {
     print "\n";
 }
@@ -167,7 +167,7 @@ May include numerous subsections (i.e., =head2, =head3, etc.).
 
 =head2 write_private_functions
 
-=head2 write_extra_imbedded_pod
+=head2 write_imbedded_pod
 
 =head1 DIAGNOSTICS
 

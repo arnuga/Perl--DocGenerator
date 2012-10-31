@@ -6,20 +6,22 @@ use Pod::POM;
 
 sub new
 {
-    my ($class, $filename) = @_;
+    my ($class, $filename, @package_function_names) = @_;
     my $self = {
-        filename => $filename,
-        pod      => undef,
-        _head1   => [],
+        filename               => $filename,
+        pod_obj                => undef,
+        pod_head1_sections     => [],
+        package_function_names => [ @package_function_names ],
+        _parsed_pod_nodes      => {},
     };
     bless $self, $class;
 
     my $parser = Pod::POM->new();
-    $self->pod($parser->parse_file($self->filename));
-    if ($self->pod()) {
-        my @head1_items = $self->pod()->head1();
+    $self->pod_obj($parser->parse_file($self->filename));
+    if ($self->pod_obj()) {
+        my @head1_items = $self->pod_obj()->head1();
         if (scalar @head1_items > 0) {
-            $self->{_head1} = \@head1_items;
+            $self->{pod_head1_sections} = \@head1_items;
         }
     }
 
@@ -35,20 +37,20 @@ sub filename
     return $self->{filename};
 }
 
-sub pod
+sub pod_obj
 {
-    my ($self, $pod) = @_;
-    if ($pod) {
-        $self->{pod} = $pod;
+    my ($self, $pod_obj) = @_;
+    if ($pod_obj) {
+        $self->{pod_obj} = $pod_obj;
     }
-    return $self->{pod};
+    return $self->{pod_obj};
 }
 
 sub head1_text
 {
     my ($self, $type) = @_;
-    if ($self->pod()) {
-        foreach my $head1 (@{ $self->{_head1} }) {
+    if ($self->pod_obj()) {
+        foreach my $head1 (@{ $self->{pod_head1_sections} }) {
             if ($head1->title() =~ /$type/) {
                 my $name_text = join("\n", $head1->text());
                 $name_text =~ s/\n+/\n/g; # cut multple newlines down to 1 each
@@ -62,6 +64,7 @@ sub head1_text
 sub name              { (shift)->head1_text('NAME')              }
 sub version           { (shift)->head1_text('VERSION')           }
 sub synopsis          { (shift)->head1_text('SYNOPSIS')          }
+sub description       { (shift)->head1_text('DESCRIPTION')       }
 sub diagnostics       { (shift)->head1_text('DIAGNOSTICS')       }
 sub configuration     { (shift)->head1_text('CONFIGURATION')     }
 sub environment       { (shift)->head1_text('ENVIRONMENT')       }
@@ -80,16 +83,40 @@ sub acknowledgements  { (shift)->head1_text('ACKNOWLEDGEMENTS')  }
 sub author            { (shift)->head1_text('AUTHOR')            }
 sub subroutines       { (shift)->methods()                       }
 
-sub description
-{
-    my $self = shift;
-    return 'name';
-}
-
 sub methods
 {
     my $self = shift;
-    return 'name';
+
+    my %methods_pod;
+    $self->_sections_for_node($self->pod_obj);
+    my $parsed_pod_nodes = $self->{_parsed_pod_nodes};
+    foreach my $package_function_name (@{ $self->{package_function_names} }) {
+        if ( grep { /$package_function_name/ } keys %$parsed_pod_nodes ) {
+            $methods_pod{$package_function_name} = $parsed_pod_nodes->{$package_function_name};
+        }
+    }
+    return %methods_pod;
+}
+
+sub _sections_for_node
+{
+    my ($self, $node) = @_;
+    if ($node) {
+        my @child_nodes = $node->content();
+        if (scalar @child_nodes > 0) {
+            foreach my $child_node (@child_nodes) {
+                $self->_sections_for_node($child_node);
+            }
+        }
+
+        my $title = $node->title();
+        my $text = $node->present();
+        if ( ($title && length($title) > 0) && ($text && length($text) > 0) ) {
+            my $nodes_hash = $self->{_parsed_pod_nodes};
+            $nodes_hash->{$title} = $text;
+            $self->{_parsed_pod_nodes} = $nodes_hash;
+        }
+    }
 }
 
 1;
@@ -125,7 +152,7 @@ May include numerous subsections (i.e., =head2, =head3, etc.).
 
 =head2 filename
 
-=head2 pod
+=head2 pod_obj
 
 =head2 name
 

@@ -62,7 +62,7 @@ sub write_package
     $self->writer_obj()->write_ios($package_obj);
     $self->writer_obj()->write_public_functions($package_obj);
     $self->writer_obj()->write_private_functions($package_obj);
-    $self->writer_obj()->write_extra_imbedded_pod($package_obj);
+    $self->writer_obj()->write_imbedded_pod($package_obj);
 
     if ($self->writer_obj()->can('after_package')) {
         $self->writer_obj()->after_package($package_obj);
@@ -96,7 +96,7 @@ sub _load_and_verify_writer
                                             write_ios
                                             write_public_functions
                                             write_private_functions
-                                            write_extra_imbedded_pod/) {
+                                            write_imbedded_pod/) {
                 die "Your writer class must define $required_method" unless ($writer_obj->can($required_method));
             }
             $self->writer_obj($writer_obj);

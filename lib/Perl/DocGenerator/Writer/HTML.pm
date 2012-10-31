@@ -251,14 +251,6 @@ sub write_public_functions
                     }
                 } $package->public_functions ]
         );
-
-        $self->page_template->param(
-            PUBLIC_FUNCTION_PODS => [
-                map {
-                    { FUNCTION_NAME => $_->name() }
-                } $package->public_functions
-            ]
-        );
     }
 }
 
@@ -279,20 +271,24 @@ sub write_private_functions
                     }
                 } $package->private_functions ]
         );
-
-        $self->page_template->param(
-            PRIVATE_FUNCTION_PODS => [
-                map {
-                    { FUNCTION_NAME => $_->name() }
-                } $package->private_functions
-            ]
-        );
     }
 }
 
-sub write_extra_imbedded_pod
+sub write_imbedded_pod
 {
-#    print "\n";
+    my ($self, $package) = @_;
+
+    if ($package->pod()) {
+        my %methods_pod = $package->pod->methods();
+
+        $self->page_template->param(
+            PUBLIC_FUNCTION_PODS => [
+                map {
+                    { FUNCTION_NAME => $_, FUNCTION_POD => $methods_pod{$_} }
+                } keys %methods_pod
+            ],
+        );
+    }
 }
 
 sub write_index
@@ -417,7 +413,7 @@ May include numerous subsections (i.e., =head2, =head3, etc.).
 
 =head2 write_private_functions
 
-=head2 write_extra_imbedded_pod
+=head2 write_imbedded_pod
 
 =head2 write_index
 

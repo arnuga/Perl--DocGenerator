@@ -16,7 +16,7 @@ sub new
 {
     my ($class, $package) = @_;
     my $self = {
-        original_filename => $package,
+        original_filename => undef,
         obj               => undef,
         package_functions => undef,
         package_name      => undef,
@@ -30,6 +30,11 @@ sub new
         return;
     }
 
+    my $original_filename = $self->_original_filename_from_inc($package);
+    if ($original_filename) {
+        $self->{original_filename} = $original_filename;
+    }
+
     if ($package =~ /\.pm$/) {
         my $likely_module_name = $self->_module_name_from_filename($package);
         if ($likely_module_name) {
@@ -40,8 +45,7 @@ sub new
     }
     $self->package_name($package);
     $self->obj(Devel::Symdump->new($package));
-    $self->pod(PodReader->new($self->original_filename));
-
+  
     return $self;
 }
 
@@ -173,9 +177,10 @@ sub obj
 
 sub pod
 {
-    my ($self, $pod) = @_;
-    if ($pod) {
-        $self->{pod} = $pod;
+    my ($self) = @_;
+    if (! $self->{pod} && $self->{original_filename}) {
+        my @functions = map { $_->name() } $self->functions();
+        $self->{pod} = PodReader->new($self->original_filename, @functions);
     }
 
     return $self->{pod};
@@ -302,15 +307,15 @@ sub _module_name_from_filename
     my ($self, $filename) = @_;
     if (-f $filename) {
         open(FILE, $filename) or die "Unable to open file $filename for reading";
-        my $first_line = <FILE>;
+        my @lines = (<FILE>);
         close(FILE) or die "Unable to close file $filename, that's not really supposed to happen";
-        chomp($first_line);
-
-        $first_line =~ /package\s([^;]+);/i;
-        if ($1) {
-            my $package_name = $1;
-            $package_name =~ s/\s*//g;
-            return $package_name;
+        foreach my $line (@lines) {
+            chomp($line);
+            if ($line =~ /^package\s([^;]+);/i) {
+                my $package_name = $1;
+                $package_name =~ s/\s*//g;
+                return $package_name;
+            }
         }
     }
     return undef;
@@ -323,6 +328,21 @@ sub original_filename
         $self->{original_filename} = $original_filename;
     }
     return $self->{original_filename};
+}
+
+sub _original_filename_from_inc
+{
+    my ($self, $package_name) = @_;
+
+    $package_name =~ s/\:\:/\//g; # find any set of :: and convert to '/'
+
+    if ($package_name !~ /\.pm/) {
+        $package_name .= '.pm';
+    }
+
+    return exists $INC{$package_name}
+        ? $INC{$package_name}
+        : undef;
 }
 
 1;

@@ -1,2 +1,6 @@
-Check for and record any POD on a per class, perl function basis
-Parse functions to *try* to determine passed in variables
+*Check for and record any POD on a per class, per function basis
+Investigate PDF templating
+Investigate XML templating (xsl)
+Build POD template
+Flesh out Screen output (auto-detect color support?)
+Investigate Frame-based html templating

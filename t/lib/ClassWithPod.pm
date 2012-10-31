@@ -37,11 +37,15 @@ May include numerous subsections (i.e., =head2, =head3, etc.).
 
 =head2 new
 
+this is the constructor
+
 =head2 my_func_one
+
+my first amazing function
 
 =head2 my_func_two
 
-
+twice as nice
 
 =head1 DIAGNOSTICS
 
