@@ -110,7 +110,18 @@ sub _sections_for_node
         }
 
         my $title = $node->title();
+        if ($title) {
+            $title =~ s/^\s*//;         # strip any leading whitespace
+            $title =~ s/^(\w+).*/$1/;   # strip anything after the first set of continuous word characters
+        }
         my $text = $node->present();
+        if ($text) {
+            $text =~ s/\n\n+/\n\n/g;    # cut multiple newlines down to 1 each
+            $text =~ s/^\s*=head.*\n//; # remove the head line itself, we don't want/need it
+            $text =~ s/^\s*\n//;        # cut the first line if its empty
+            $text =~ s/\n\s*\n$//;      # cut the last line if its empty
+            $text =~ s/\n$//;           # remove the last newline at the end (if it has one)
+        }
         if ( ($title && length($title) > 0) && ($text && length($text) > 0) ) {
             my $nodes_hash = $self->{_parsed_pod_nodes};
             $nodes_hash->{$title} = $text;

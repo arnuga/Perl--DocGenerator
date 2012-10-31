@@ -43,9 +43,12 @@ this is the constructor
 
 my first amazing function
 
-=head2 my_func_two
+=head2 my_func_two()
 
-twice as nice
+twice as nice (except I'm trying to be clever in my head2 line)
+
+
+Also I have 2 lines of text with a double space in between 
 
 =head1 DIAGNOSTICS
 
