@@ -10,6 +10,13 @@ lib/Perl/DocGenerator/Writer/html_templates/index.tmpl
 lib/Perl/DocGenerator/Writer/html_templates/package.tmpl
 lib/Perl/DocGenerator/Writer/html_templates/header.tmpl
 lib/Perl/DocGenerator/Writer/html_templates/footer.tmpl
+lib/Perl/DocGenerator/Writer/html_templates/scalars.tmpl
+lib/Perl/DocGenerator/Writer/html_templates/arrays.tmpl
+lib/Perl/DocGenerator/Writer/html_templates/hashes.tmpl
+lib/Perl/DocGenerator/Writer/html_templates/ios.tmpl
+lib/Perl/DocGenerator/Writer/html_templates/public_functions.tmpl
+lib/Perl/DocGenerator/Writer/html_templates/private_functions.tmpl
+lib/Perl/DocGenerator/Writer/html_templates/pod.tmpl
 lib/Perl/DocGenerator/Writer/PDF.pm
 lib/Perl/DocGenerator/Writer/Pod.pm
 lib/Perl/DocGenerator/Writer/Screen.pm
@@ -31,3 +38,4 @@ t/pod.t
 t/lib/Bar.pm
 t/lib/Baz.pm
 t/lib/Bah.pm
+t/lib/ClassWithPod.pm

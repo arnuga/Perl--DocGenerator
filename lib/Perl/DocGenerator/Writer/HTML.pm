@@ -183,7 +183,10 @@ sub write_package_description
         $self->page_template->param(
             BASE_CLASSES => [
                 map {
-                    { BASE_CLASS_NAME => $_->name() }
+                    {
+                        BASE_CLASS_NAME => $_->name(),
+                        BASE_CLASS_HREF => $self->_filename_from_package_name($_->name()),
+                    }
                 } @base_classes
             ]
         );
@@ -281,13 +284,16 @@ sub write_imbedded_pod
     if ($package->pod()) {
         my %methods_pod = $package->pod->methods();
 
-        $self->page_template->param(
-            PUBLIC_FUNCTION_PODS => [
-                map {
-                    { FUNCTION_NAME => $_, FUNCTION_POD => $methods_pod{$_} }
-                } keys %methods_pod
-            ],
-        );
+        if (scalar keys %methods_pod > 0) {
+            $self->page_template->param(HAS_FUNCTION_PODS => 1);
+            $self->page_template->param(
+                FUNCTION_PODS => [
+                    map {
+                        { FUNCTION_NAME => $_, FUNCTION_POD => $methods_pod{$_} }
+                    } keys %methods_pod
+                ],
+            );
+        }
     }
 }
 

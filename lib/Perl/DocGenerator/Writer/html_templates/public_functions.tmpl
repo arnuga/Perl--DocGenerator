@@ -1,0 +1,15 @@
+  <tr bgcolor="#CCCCFF"> 
+    <td colspan="3"><font size="+2"><b>Public Functions</b></font></td> 
+  </tr> 
+  <tr> 
+    <td><b>Function Name</b></td> 
+    <td><b>Is Overridden</b></td>
+    <td><b>Inherited From</b></td> 
+  </tr> 
+  <TMPL_LOOP NAME=PUBLIC_FUNCTIONS> 
+  <tr> 
+    <td><a href="<TMPL_VAR NAME=FUNCTION_NAME_ANCHOR_HREF>"><TMPL_VAR NAME=FUNCTION_NAME></a></td>
+    <td><TMPL_VAR NAME=FUNCTION_OVERRIDDEN></td>
+   <td><a href="<TMPL_VAR NAME=BASE_CLASS_FUNCTION_HREF>"><TMPL_VAR NAME=BASE_CLASS_FUNCTION_NAME></a></td> 
+  </tr> 
+  </TMPL_LOOP> 

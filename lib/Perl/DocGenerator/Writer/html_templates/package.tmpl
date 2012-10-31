@@ -1,3 +1,4 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Frameset//EN""http://www.w3.org/TR/REC-html40/frameset.dtd">
 <html> 
 <head>
 <style type="text/css">
@@ -11,9 +12,9 @@ a:link {
 <h2>Package <TMPL_VAR NAME=PACKAGE_NAME></h2> 
 <br /> 
 <TMPL_IF NAME=HAS_BASE_CLASSES> 
-<pre>
+<pre id="base-classes">
 <TMPL_LOOP NAME=BASE_CLASSES> 
-<b><TMPL_VAR NAME=BASE_CLASS_NAME></b> 
+<b><TMPL_VAR NAME=BASE_CLASS_NAME></a></b>
 </TMPL_LOOP> 
   |
   +--<b><TMPL_VAR NAME=PACKAGE_NAME></b> 
@@ -25,114 +26,34 @@ a:link {
 Public Package <TMPL_VAR NAME=PACKAGE_NAME> 
 <TMPL_IF NAME=HAS_BASE_CLASSES> 
 <TMPL_LOOP NAME=BASE_CLASSES><br />
-&nbsp;&nbsp;&nbsp;&nbsp;extends <TMPL_VAR NAME=BASE_CLASS_NAME> 
+&nbsp;&nbsp;&nbsp;&nbsp;extends <a href="<TMPL_VAR NAME=BASE_CLASS_HREF>"><TMPL_VAR NAME=BASE_CLASS_NAME></a>
 </TMPL_LOOP> 
 </TMPL_IF> 
- 
 <TMPL_VAR NAME=PACKAGE_POD> 
 <hr /> 
+<table border="1" width="100%" bordercolor="#000000">
 <TMPL_IF NAME=HAS_SCALARS> 
-<table border="1" width="100%"> 
-  <tr bgcolor="#CCCCFF"> 
-    <td colspan="3">
-        <font size="+2"><b>Scalars: </b></font>
-        <TMPL_LOOP NAME=SCALARS> 
-          <TMPL_VAR NAME=SCALAR>
-        </TMPL_LOOP> 
-    </td> 
-  </tr> 
+  <tr id="scalars" bgcolor="#ccccff"><td colspan="3"><TMPL_INCLUDE NAME="scalars.tmpl"></td></tr>
 </TMPL_IF> 
 <TMPL_IF NAME=HAS_ARRAYS> 
-  <tr bgcolor="#CCCCFF"> 
-    <td colspan="3">
-        <font size="+2"><b>Arrays: </b></font>
-        <TMPL_LOOP NAME=ARRAYS> 
-          <TMPL_VAR NAME=ARRAY> 
-        </TMPL_LOOP> 
-    </td> 
-  </tr> 
+  <tr id="arrays" bgcolor="#ccccff"><td colspan="3"><TMPL_INCLUDE NAME="arrays.tmpl"></td></tr>
 </TMPL_IF> 
 <TMPL_IF NAME=HAS_HASHES> 
-  <tr bgcolor="#CCCCFF"> 
-    <td colspan="3">
-        <font size="+2"><b>Hashes: </b></font>
-        <TMPL_LOOP NAME=HASHES> 
-          <TMPL_VAR NAME=HASH> 
-        </TMPL_LOOP> 
-    </td> 
-  </tr> 
+  <tr id="hashes" bgcolor="#ccccff"><td colspan="3"><TMPL_INCLUDE NAME="hashes.tmpl"></td></tr>
 </TMPL_IF> 
 <TMPL_IF NAME=HAS_IOS> 
-  <tr bgcolor="#CCCCFF"> 
-    <td colspan="3">
-        <font size="+2"><b>IOs: </b></font>
-        <TMPL_LOOP NAME=IOS> 
-          <TMPL_VAR NAME=IO> 
-        </TMPL_LOOP> 
-    </td> 
-  </tr> 
+  <tr id="ios" bgcolor="#ccccff"><td colspan="3"><TMPL_INCLUDE NAME="ios.tmpl"></td></tr>
 </TMPL_IF> 
 <TMPL_IF NAME=HAS_PUBLIC_FUNCTIONS> 
-  <tr bgcolor="#CCCCFF"> 
-    <td colspan="3"><font size="+2"><b>Public Functions</b></font></td> 
-  </tr> 
-  <tr> 
-    <td><b>Function Name</b></td> 
-    <td><b>Is Overridden</b></td>
-    <td><b>Inherited From</b></td> 
-  </tr> 
-  <TMPL_LOOP NAME=PUBLIC_FUNCTIONS> 
-  <tr> 
-    <td><a href="<TMPL_VAR NAME=FUNCTION_NAME_ANCHOR_HREF>"><TMPL_VAR NAME=FUNCTION_NAME></a></td>
-    <td><TMPL_VAR NAME=FUNCTION_OVERRIDDEN></td>
-   <td><a href="<TMPL_VAR NAME=BASE_CLASS_FUNCTION_HREF>"><TMPL_VAR NAME=BASE_CLASS_FUNCTION_NAME></a></td> 
-  </tr> 
-  </TMPL_LOOP> 
+  <TMPL_INCLUDE NAME="public_functions.tmpl">
 </TMPL_IF> 
 <TMPL_IF NAME=HAS_PRIVATE_FUNCTIONS> 
-  <tr bgcolor="#CCCCFF"> 
-    <td colspan="3"><font size="+2"><b>Private Functions</b></font></td> 
-  </tr> 
-  <tr> 
-    <td><b>Function Name</b></td> 
-    <td><b>Is Overridden</b></td>
-    <td><b>Inherited From</b></td> 
-  </tr> 
-  <TMPL_LOOP NAME=PRIVATE_FUNCTIONS> 
-  <tr> 
-    <td><a href="<TMPL_VAR NAME=FUNCTION_NAME_ANCHOR_HREF>"><TMPL_VAR NAME=FUNCTION_NAME></a></td>
-    <td><TMPL_VAR NAME=FUNCTION_OVERRIDDEN></td>
-    <td><a href="<TMPL_VAR NAME=BASE_CLASS_FUNCTION_HREF>"><TMPL_VAR NAME=BASE_CLASS_FUNCTION_NAME></a></td> 
-  </tr> 
-  </TMPL_LOOP> 
+  <TMPL_INCLUDE NAME="private_functions.tmpl">
 </TMPL_IF> 
 </table> 
 <hr /> 
-  <TMPL_LOOP NAME=PUBLIC_FUNCTION_PODS>
-<table width="100%">
-  <tr>
-    <td>
-      <a name="<TMPL_VAR NAME=FUNCTION_NAME>">
-        <TMPL_VAR NAME=FUNCTION_NAME><br/>
-        <TMPL_VAR NAME=FUNCTION_POD>
-      </a>
-    </td>
-  </tr>
-</table>
-<hr />
-  </TMPL_LOOP>
-  <TMPL_LOOP NAME=PRIVATE_FUNCTION_PODS>
-<table width="100%">
-  <tr>
-    <td>
-      <a name="<TMPL_VAR NAME=FUNCTION_NAME>">
-        <TMPL_VAR NAME=FUNCTION_NAME><br/>
-        <TMPL_VAR NAME=FUNCTION_POD>
-      </a>
-    </td>
-  </tr>
-</table>
-<hr />
-  </TMPL_LOOP>
+<TMPL_IF NAME=HAS_FUNCTION_PODS>
+  <TMPL_INCLUDE NAME="pod.tmpl">
+</TMPL_IF> 
 <TMPL_INCLUDE NAME="footer.tmpl">
 </html> 

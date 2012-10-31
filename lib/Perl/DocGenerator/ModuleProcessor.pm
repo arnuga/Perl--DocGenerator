@@ -24,10 +24,17 @@ sub new
     };
     bless $self, $class;
 
-    eval { load($package) };
-    if (my $err = $@) {
-        warn "Unable to load package '$package': $err";
-        return;
+    {
+        BEGIN { $^W = 0 }   # it's not my code, you make it compile clean
+        no warnings 'all';  # no seriously, I said shutup!
+        eval {
+            load($package);
+        };
+
+        if (my $err = $@) {
+            warn "Unable to load package '$package': $err";
+            return undef;
+        }
     }
 
     my $original_filename = $self->_original_filename_from_inc($package);
@@ -35,7 +42,7 @@ sub new
         $self->{original_filename} = $original_filename;
     }
 
-    if ($package =~ /\.pm$/) {
+    if ($package =~ /\.pm$/) { # does it have a .pm at the end? (is it a filename?)
         my $likely_module_name = $self->_module_name_from_filename($package);
         if ($likely_module_name) {
             $package = $likely_module_name;
@@ -44,7 +51,12 @@ sub new
         }
     }
     $self->package_name($package);
-    $self->obj(Devel::Symdump->new($package));
+
+    eval { $self->obj(Devel::Symdump->new($package)); };
+    if (my $devel_symdump_err = $@) {
+        warn "Woah! Devel::Symdump cannot cleaning read your library, what voodoo are you performing?";
+        return undef;
+    }
   
     return $self;
 }
@@ -66,6 +78,7 @@ sub base_classes
         my ($isa_class) = grep { $_->name =~ /ISA/ } $self->_arrays;
         if (defined $isa_class) {
             no strict 'refs';
+            # grab every class in ISA except myself
             my @base_classes = grep { ! /@{[ $self->package_name() ]}/ } @{ $self->package_name() . '::ISA' };
             foreach my $base_item (@base_classes) {
                 my $item_obj = Item->new();
@@ -101,6 +114,7 @@ sub scalars
 {
     my ($self) = @_;
     my @functions = $self->functions();
+    # grab all the scalars that are direct members of my namespace
     my @scalars = grep { $_ ne uc($_) } map { /@{[ $self->package_name() ]}::(.*)/ } $self->obj->scalars;
 
     my %seen;
@@ -109,6 +123,7 @@ sub scalars
     @seen{ map { $_->name } @functions } = ();
 
     foreach my $item (@scalars) {
+        # skip anonymous functions refs maybe in the future we'll do something with these in the functions sections
         next if (exists $seen{$item} || $item =~ /__ANON__/);
         my $item_obj = Item->new();
         $item_obj->object_type(T_SCALAR);
@@ -133,6 +148,7 @@ sub functions
     my ($self) = @_;
     if (! $self->{package_functions}) {
         my @return_functions = ();
+        # grab all the functions that are direct members of my namespace
         my @functions = grep { $_ ne uc($_) } map { /@{[ $self->package_name() ]}::(.*)/ } $self->obj->functions;
 
         foreach my $function (@functions) {
@@ -146,6 +162,9 @@ sub functions
             push(@return_functions, $item_obj);
         }
 
+            # see which functions are defined in one or more of our base classes
+            # Need to investigate if we are falsely reporting a method as overridden when in fact
+            # its just beem hooked into our namespace via export, export_ok or even a direct ->import() call
             foreach my $base_class ($self->base_classes) {
             my @base_functions = $self->_module_for_package($base_class->name)->functions();
 			foreach my $base_function (@base_functions) {
@@ -189,6 +208,7 @@ sub pod
 sub private_functions
 {
     my ($self) = @_;
+    # private functions are those that start with an underscore '_'
     my @private_funcs = grep { $_->name =~ /^_/ } $self->functions;
 
     return @private_funcs;
@@ -197,6 +217,7 @@ sub private_functions
 sub public_functions
 {
     my ($self) = @_;
+    # public functions are those that DO NOT start with an underscore '_'
     my @public_funcs = grep { $_->name =~ /^[^_]/ } $self->functions;
 
     return @public_funcs;
@@ -292,6 +313,7 @@ sub _module_for_package
 
 sub _unique_items_from_first_list
 {
+    # this is taken from the perl cookbook (1st ed.) page 
     my ($self, $arrayA, $arrayB) = @_;
     my %seen;
     my @aonly = ();
