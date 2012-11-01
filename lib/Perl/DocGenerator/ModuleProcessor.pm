@@ -54,7 +54,7 @@ sub new
 
     eval { $self->obj(Devel::Symdump->new($package)); };
     if (my $devel_symdump_err = $@) {
-        warn "Woah! Devel::Symdump cannot cleaning read your library, what voodoo are you performing?";
+        warn "Woah! Devel::Symdump cannot cleanly read your library, you must be performing some voodoo";
         return undef;
     }
   
