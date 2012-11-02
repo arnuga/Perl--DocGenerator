@@ -32,6 +32,7 @@ t/03-writer.t
 t/04-overridden-functions.t
 t/05-calculates-year-correctly.t
 t/06-parse_pod_docs.t
+t/07-operator-overloading-detection.t
 t/manifest.t
 t/pod-coverage.t
 t/pod.t
@@ -39,3 +40,4 @@ t/lib/Bar.pm
 t/lib/Baz.pm
 t/lib/Bah.pm
 t/lib/ClassWithPod.pm
+t/lib/Overloader.pm
