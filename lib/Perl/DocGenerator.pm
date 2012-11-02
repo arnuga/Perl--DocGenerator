@@ -8,6 +8,7 @@ our $VERSION = '0.02';
 use Perl::DocGenerator::ModuleProcessor;
 use Perl::DocGenerator::Writer;
 use File::Find;
+use Class::Unload;
 
 sub new
 {
@@ -65,16 +66,21 @@ sub scan_packages
     my @locations = grep { defined $_ } ($self->folders(), $self->packages(), @packages);
     $self->_find_perl_modules_at_locations(@locations); 
 
-    no warnings;
-    print "Scanning packages...";
-    foreach my $location ($self->packages()) {
-        if ($location) {
-            my $mod_proc;
-            eval { $mod_proc = Perl::DocGenerator::ModuleProcessor->new($location, $self->recursive()); };
-            if ($mod_proc) {
-                my @loaded_packages = $self->loaded_packages();
-                push(@loaded_packages, $mod_proc);
-                $self->loaded_packages(@loaded_packages);
+    {
+        BEGIN { $^W = 0 }   # it's not my code, you make it compile clean
+        no warnings 'all';  # no seriously, I said shutup!
+
+        print "Processing packages...";
+        foreach my $location ($self->packages()) {
+            if ($location) {
+                print "Processing $location\n";
+                my $mod_proc;
+                eval { $mod_proc = Perl::DocGenerator::ModuleProcessor->new($location, $self->recursive()); };
+                if ($mod_proc) {
+                    my @loaded_packages = $self->loaded_packages();
+                    push(@loaded_packages, $mod_proc);
+                    $self->loaded_packages(@loaded_packages);
+                }
             }
         }
     }
@@ -91,8 +97,17 @@ sub output
     }
     $writer->initialize_writer();
     print "Writing packages...";
-    foreach my $package ($self->loaded_packages()) {
+    my $total_packages = scalar $self->loaded_packages() - 1;
+    my $i = 0;
+
+    my @packages = @{$self->{loaded_packages}};
+    $self->{loaded_packages} = []; # clear this, save some memory
+
+    while (my $package = shift @packages) {
+        print "Writing [$i/$total_packages] $package\n";
         $writer->write_package($package);
+        Class::Unload->unload($package);
+        $i++;
     }
     $writer->finish;
     print "done\n";

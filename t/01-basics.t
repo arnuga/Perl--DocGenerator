@@ -2,7 +2,7 @@
 
 use strict;
 use lib 't/lib';
-use Test::More tests => 8;
+use Test::More tests => 9;
 use Perl::DocGenerator::ModuleProcessor;
 
 my $module = Perl::DocGenerator::ModuleProcessor->new('Bar');
@@ -15,10 +15,11 @@ can_ok($module, qw/new base_classes packages scalars functions private_functions
 
 cmp_ok($module->package_name, 'eq', 'Bar');
 
-cmp_ok($module->scalars, '==', 1);
+cmp_ok($module->scalars, '==', 2);
 
-my ($scalar) = $module->scalars;
-cmp_ok($scalar->name, 'eq', 'global_thing');
+my @scalars = $module->scalars;
+cmp_ok($scalars[0]->name, 'eq', 'BEGIN');
+cmp_ok($scalars[1]->name, 'eq', 'global_thing');
 
 cmp_ok($module->functions, '==', 1);
 

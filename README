@@ -23,7 +23,6 @@ already?
 INSTALLATION
 
 The following CPAN libraries are required for this module to install:
-    aliased
     Devel::Symdump
     enum
     File::Find

@@ -15,15 +15,16 @@ sub new
 {
     my ($class) = @_;
     my $self = {
-        base_classes     => [],
-        full_name        => undef,
-	    is_overridden    => undef,
-        name             => undef,
-        object_type      => undef,
-        obj              => undef,
-        original_package => undef,
-        package          => undef,
-        anchor_href      => undef,
+        base_classes         => [],
+        full_name            => undef,
+	    is_overridden        => undef,
+        name                 => undef,
+        object_type          => undef,
+        obj                  => undef,
+        original_package     => undef,
+        package              => undef,
+        anchor_href          => undef,
+        is_operator_overload => undef,
     };
     bless $self, $class;
     return $self;
@@ -82,6 +83,15 @@ sub anchor_href
     }
 
     return $self->{anchor_href};
+}
+
+sub is_operator_overload
+{
+	my ($self, $is_operator_overload) = @_;
+	if ($is_operator_overload) {
+		$self->{is_operator_overload} = $is_operator_overload eq 'Y' ? 1 : undef;
+	}
+	return $self->{is_operator_overload} ? 'Y' : 'N';
 }
 
 sub package
@@ -151,6 +161,8 @@ May include numerous subsections (i.e., =head2, =head3, etc.).
 =head2 is_overridden
 
 =head2 anchor_href
+
+=head2 is_operator_overload
 
 =head2 name
 

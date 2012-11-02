@@ -7,8 +7,8 @@ use warnings;
 require Devel::Symdump;
 
 use Module::Load;
-use aliased 'Perl::DocGenerator::Item';
-use aliased 'Perl::DocGenerator::PodReader';
+use Perl::DocGenerator::Item;
+use Perl::DocGenerator::PodReader;
 
 our $VERSION = '0.01';
 
@@ -81,7 +81,7 @@ sub base_classes
             # grab every class in ISA except myself
             my @base_classes = grep { ! /@{[ $self->package_name() ]}/ } @{ $self->package_name() . '::ISA' };
             foreach my $base_item (@base_classes) {
-                my $item_obj = Item->new();
+                my $item_obj = Perl::DocGenerator::Item->new();
                 $item_obj->object_type(T_BASE_CLASS);
                 $item_obj->name($base_item);
                 $item_obj->package($base_item);
@@ -99,7 +99,7 @@ sub packages
     my ($self) = @_;
     my @return_packages = ();
     foreach my $package ($self->packages) {
-        my $item_obj = Item->new();
+        my $item_obj = Perl::DocGenerator::Item->new();
         $item_obj->object_type(T_PACKAGE);
         $item_obj->name($package);
         $item_obj->package($package);
@@ -115,7 +115,11 @@ sub scalars
     my ($self) = @_;
     my @functions = $self->functions();
     # grab all the scalars that are direct members of my namespace
-    my @scalars = grep { $_ ne uc($_) } map { /@{[ $self->package_name() ]}::(.*)/ } $self->obj->scalars;
+    my @scalars;
+    foreach my $scalar_name (sort $self->obj->scalars) {
+        $scalar_name =~ s/@{[ $self->package_name() ]}::(.*)/$1/;
+        push @scalars, $scalar_name;
+    }
 
     my %seen;
     my @scalaronly;
@@ -125,7 +129,8 @@ sub scalars
     foreach my $item (@scalars) {
         # skip anonymous functions refs maybe in the future we'll do something with these in the functions sections
         next if (exists $seen{$item} || $item =~ /__ANON__/);
-        my $item_obj = Item->new();
+        next if ($item =~ /::$/); # skip namespace entries, we don't care about them
+        my $item_obj = Perl::DocGenerator::Item->new();
         $item_obj->object_type(T_SCALAR);
         $item_obj->name($item);
         $item_obj->package($self->package_name());
@@ -135,9 +140,12 @@ sub scalars
     }
 
     foreach my $base_class ($self->base_classes) {
-        my @base_items = $self->_module_for_package($base_class->name)->scalars();
-        @base_items = $self->_unique_items_from_first_list(\@base_items, \@scalaronly);
-        push(@scalaronly, @base_items);
+        my $module = $self->_module_for_package($base_class->name);
+        if ($module) {
+            my @base_items = $module->scalars();
+            @base_items = $self->_unique_items_from_first_list(\@base_items, \@scalaronly);
+            push(@scalaronly, @base_items);
+        }
     }
 
     return @scalaronly;
@@ -149,34 +157,49 @@ sub functions
     if (! $self->{package_functions}) {
         my @return_functions = ();
         # grab all the functions that are direct members of my namespace
-        my @functions = grep { $_ ne uc($_) } map { /@{[ $self->package_name() ]}::(.*)/ } $self->obj->functions;
+        my @functions;
+        foreach my $function_name (sort $self->obj->functions) {
+            $function_name =~ s/@{[ $self->package_name() ]}::(.*)/$1/;
+            push @functions, $function_name;
+        }
 
         foreach my $function (@functions) {
-            my $item_obj = Item->new();
+            my $is_operator_overload = undef;
+            if (_is_function_an_operator_overload($function)) {
+                if ($function =~ /^\(/ && $function ne '()') {
+                    $function =~ s/^\(//; # strip the '(' off the front if it has one but is not the () function
+                }
+                $is_operator_overload = 'Y';
+            }
+            my $item_obj = Perl::DocGenerator::Item->new();
             $item_obj->object_type(T_FUNCTION);
             $item_obj->name($function);
             $item_obj->package($self->package_name());
             $item_obj->original_package($self->package_name());
             $item_obj->full_name(join('::', $self->package_name(), $function));
             $item_obj->anchor_href(uc($function));
+            $item_obj->is_operator_overload($is_operator_overload);
             push(@return_functions, $item_obj);
         }
 
-            # see which functions are defined in one or more of our base classes
-            # Need to investigate if we are falsely reporting a method as overridden when in fact
-            # its just beem hooked into our namespace via export, export_ok or even a direct ->import() call
-            foreach my $base_class ($self->base_classes) {
-            my @base_functions = $self->_module_for_package($base_class->name)->functions();
-			foreach my $base_function (@base_functions) {
-				foreach my $function (@return_functions) {
-					if ($base_function->name() eq $function->name()) {
-						$function->original_package($base_function->package());
-						$function->is_overridden('Y');
-					}
-				}
-			}
-            @base_functions = $self->_unique_items_from_first_list(\@base_functions, \@return_functions);
-            push(@return_functions, @base_functions);
+        # see which functions are defined in one or more of our base classes
+        # Need to investigate if we are falsely reporting a method as overridden when in fact
+        # its just beem hooked into our namespace via export, export_ok or even a direct ->import() call
+        foreach my $base_class ($self->base_classes) {
+            my $module = $self->_module_for_package($base_class->name);
+            if ($module) {
+                my @base_functions = $module->functions();
+			    foreach my $base_function (@base_functions) {
+			    	foreach my $function (@return_functions) {
+			    		if ($base_function->name() eq $function->name()) {
+			    			$function->original_package($base_function->package());
+			    			$function->is_overridden('Y');
+			    		}
+			    	}
+			    }
+                @base_functions = $self->_unique_items_from_first_list(\@base_functions, \@return_functions);
+                push(@return_functions, @base_functions);
+            }
         }
 
         $self->{package_functions} = [@return_functions];
@@ -199,7 +222,7 @@ sub pod
     my ($self) = @_;
     if (! $self->{pod} && $self->{original_filename}) {
         my @functions = map { $_->name() } $self->functions();
-        $self->{pod} = PodReader->new($self->original_filename, @functions);
+        $self->{pod} = Perl::DocGenerator::PodReader->new($self->original_filename, @functions);
     }
 
     return $self->{pod};
@@ -229,9 +252,12 @@ sub arrays
     my @return_arrays = $self->_arrays;
 
     foreach my $base_class ($self->base_classes) {
-        my @base_items = $self->_module_for_package($base_class->name)->arrays();
-        @base_items = $self->_unique_items_from_first_list(\@base_items, [ $self->_arrays ]);
-        push(@return_arrays, @base_items);
+        my $module = $self->_module_for_package($base_class->name);
+        if ($module) {
+            my @base_items = $module->arrays();
+            @base_items = $self->_unique_items_from_first_list(\@base_items, [ $self->_arrays ]);
+            push(@return_arrays, @base_items);
+        }
     }
 
     return @return_arrays;
@@ -241,9 +267,15 @@ sub _arrays
 {
     my ($self) = @_;
     my @return_arrays;
-    my @arrays = map { /@{[ $self->package_name() ]}::(.*)/ } $self->obj->arrays;
+
+    my @arrays;
+    foreach my $array_name (sort $self->obj->arrays) {
+        $array_name =~ s/@{[ $self->package_name() ]}::(.*)/$1/;
+        push @arrays, $array_name;
+    }
+
     foreach my $array (@arrays) {
-        my $item_obj = Item->new();
+        my $item_obj = Perl::DocGenerator::Item->new();
         $item_obj->object_type(T_ARRAY);
         $item_obj->name($array);
         $item_obj->package($self->package_name());
@@ -259,10 +291,15 @@ sub hashes
 {
     my ($self) = @_;
     my @return_hashes;
-    my @hashes = grep { $_ ne uc($_) } map { /@{[ $self->package_name() ]}::(.*)/ } $self->obj->hashes;
+
+    my @hashes;
+    foreach my $hash_name (sort $self->obj->hashes) {
+        $hash_name =~ s/@{[ $self->package_name() ]}::(.*)/$1/;
+        push @hashes, $hash_name;
+    }
 
     foreach my $hash (@hashes) {
-        my $item_obj = Item->new();
+        my $item_obj = Perl::DocGenerator::Item->new();
         $item_obj->object_type(T_HASH);
         $item_obj->name($hash);
         $item_obj->package($self->package_name());
@@ -272,9 +309,12 @@ sub hashes
     }
 
         foreach my $base_class ($self->base_classes) {
-        my @base_items = $self->_module_for_package($base_class->name)->hashes();
-        @base_items = $self->_unique_items_from_first_list(\@base_items, \@return_hashes);
-        push(@return_hashes, @base_items);
+            my $module = $self->_module_for_package($base_class->name);
+            if ($module) {
+                my @base_items = $module->hashes();
+                @base_items = $self->_unique_items_from_first_list(\@base_items, \@return_hashes);
+                push(@return_hashes, @base_items);
+            }
     }
 
     return @return_hashes;
@@ -284,10 +324,15 @@ sub ios
 {
     my ($self) = @_;
     my @return_ios;
-    my @ios = grep { $_ ne uc($_) } map { /@{[ $self->package_name() ]}::(.*)/ } $self->obj->ios;
+
+    my @ios;
+    foreach my $io_name (sort $self->obj->ios) {
+        $io_name =~ s/@{[ $self->package_name() ]}::(.*)/$1/;
+        push @ios, $io_name;
+    }
 
     foreach my $ios (@ios) {
-        my $item_obj = Item->new();
+        my $item_obj = Perl::DocGenerator::Item->new();
         $item_obj->object_type(T_IOS);
         $item_obj->name($ios);
         $item_obj->package($self->package_name());
@@ -297,9 +342,12 @@ sub ios
     }
 
         foreach my $base_class ($self->base_classes) {
-        my @base_items = $self->_module_for_package($base_class->name)->ios();
-        @base_items = $self->_unique_items_from_first_list(\@base_items, \@return_ios);
-        push(@return_ios, @base_items);
+            my $module = $self->_module_for_package($base_class->name);
+            if ($module) {
+                my @base_items = $module->ios();
+                @base_items = $self->_unique_items_from_first_list(\@base_items, \@return_ios);
+                push(@return_ios, @base_items);
+            }
     }
 
     return @return_ios;
@@ -308,12 +356,24 @@ sub ios
 sub _module_for_package
 {
     my ($self, $package) = @_;
-    return __PACKAGE__->new($package);
+    my $module;
+    {
+        BEGIN { $^W = 0 }   # it's not my code, you make it compile clean
+        no warnings 'all';  # no seriously, I said shutup!
+        eval { $module = __PACKAGE__->new($package); };
+
+        if (my $err = $@) {
+            warn "Unable to load package '$package': $err";
+            return undef;
+        }
+    }
+
+    return $module;
 }
 
 sub _unique_items_from_first_list
 {
-    # this is taken from the perl cookbook (1st ed.) page 
+    # this is taken from the perl cookbook (1st ed.) page 104
     my ($self, $arrayA, $arrayB) = @_;
     my %seen;
     my @aonly = ();
@@ -365,6 +425,96 @@ sub _original_filename_from_inc
     return exists $INC{$package_name}
         ? $INC{$package_name}
         : undef;
+}
+
+sub _is_function_an_operator_overload
+{
+    my ($function_name) = @_;
+
+    return 1 if ($function_name =~ /^\(/);
+
+    return 1 if ($function_name eq '+');
+    return 1 if ($function_name eq '-');
+    return 1 if ($function_name eq '*');
+    return 1 if ($function_name eq '/');
+    return 1 if ($function_name eq '%');
+    return 1 if ($function_name eq '**');
+    return 1 if ($function_name eq '<<');
+    return 1 if ($function_name eq '>>');
+    return 1 if ($function_name eq 'x');
+    return 1 if ($function_name eq '.');
+
+    return 1 if ($function_name eq '+=');
+    return 1 if ($function_name eq '-=');
+    return 1 if ($function_name eq '*=');
+    return 1 if ($function_name eq '/=');
+    return 1 if ($function_name eq '%=');
+    return 1 if ($function_name eq '**=');
+    return 1 if ($function_name eq '<<=');
+    return 1 if ($function_name eq '>>=');
+    return 1 if ($function_name eq 'x=');
+    return 1 if ($function_name eq '.=');
+
+    return 1 if ($function_name eq '<');
+    return 1 if ($function_name eq '<=');
+    return 1 if ($function_name eq '>');
+    return 1 if ($function_name eq '>=');
+    return 1 if ($function_name eq '==');
+    return 1 if ($function_name eq '!=');
+
+    return 1 if ($function_name eq '<=>');
+    return 1 if ($function_name eq 'cmp');
+
+    return 1 if ($function_name eq 'lt');
+    return 1 if ($function_name eq 'le');
+    return 1 if ($function_name eq 'gt');
+    return 1 if ($function_name eq 'ge');
+    return 1 if ($function_name eq 'eq');
+    return 1 if ($function_name eq 'ne');
+
+    return 1 if ($function_name eq '&');
+    return 1 if ($function_name eq '&=');
+    return 1 if ($function_name eq '|');
+    return 1 if ($function_name eq '|=');
+    return 1 if ($function_name eq '^');
+    return 1 if ($function_name eq '^=');
+
+    return 1 if ($function_name eq 'neg');
+    return 1 if ($function_name eq '!');
+    return 1 if ($function_name eq '~');
+
+    return 1 if ($function_name eq '++');
+    return 1 if ($function_name eq '--');
+
+    return 1 if ($function_name eq 'atan2');
+    return 1 if ($function_name eq 'cos');
+    return 1 if ($function_name eq 'sin');
+    return 1 if ($function_name eq 'exp');
+    return 1 if ($function_name eq 'abs');
+    return 1 if ($function_name eq 'log');
+    return 1 if ($function_name eq 'sqrt');
+    return 1 if ($function_name eq 'int');
+
+    return 1 if ($function_name eq 'bool');
+    return 1 if ($function_name eq '""');
+    return 1 if ($function_name eq '0+');
+    return 1 if ($function_name eq 'qr');
+
+    return 1 if ($function_name eq '<>');
+
+    return 1 if ($function_name eq '${}');
+    return 1 if ($function_name eq '@{}');
+    return 1 if ($function_name eq '%{}');
+    return 1 if ($function_name eq '&{}');
+    return 1 if ($function_name eq '*{}');
+
+    return 1 if ($function_name eq '~~');
+
+    return 1 if ($function_name eq 'nomethod');
+    return 1 if ($function_name eq 'fallback');
+    return 1 if ($function_name eq '=');
+
+    return undef;
 }
 
 1;

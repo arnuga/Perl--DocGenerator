@@ -14,7 +14,6 @@ my $builder = Module::Build->new(
     },
     requires => {
         'perl'               => 5.006,
-        'aliased'            => 0,
         'Devel::Symdump'     => 0,
         'enum'               => 0,
         'File::Find'         => 0,

@@ -1,5 +1,10 @@
+Sort Function lists
+Further display base packages (recurse)
+Clean out garbage in scalar lists (remove namespaces from the scalar list)
+Clean up html template for the index
 Investigate PDF templating
 Investigate XML templating (xsl)
 Build POD template
 Flesh out Screen output (auto-detect color support?)
 Investigate Frame-based html templating
+Release modules after they have been processed to reduce memory usage

@@ -91,7 +91,7 @@ sub methods
     $self->_sections_for_node($self->pod_obj);
     my $parsed_pod_nodes = $self->{_parsed_pod_nodes};
     foreach my $package_function_name (@{ $self->{package_function_names} }) {
-        if ( grep { /$package_function_name/ } keys %$parsed_pod_nodes ) {
+        if (exists $parsed_pod_nodes->{$package_function_name}) {
             $methods_pod{$package_function_name} = $parsed_pod_nodes->{$package_function_name};
         }
     }

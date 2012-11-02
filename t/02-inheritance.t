@@ -2,7 +2,7 @@
 
 use strict;
 use lib 't/lib';
-use Test::More tests => 21;
+use Test::More tests => 23;
 use Perl::DocGenerator::ModuleProcessor;
 
 {
@@ -38,13 +38,16 @@ use Perl::DocGenerator::ModuleProcessor;
     my @scalars = $module->scalars;
     my $num_scalars = scalar @scalars;
 
-    cmp_ok($num_scalars, '==', 2);
-    cmp_ok($scalars[0]->name, 'eq', 'other_global_thing');
+    cmp_ok($num_scalars, '==', 4);
+    cmp_ok($scalars[0]->name, 'eq', 'BEGIN');
+    cmp_ok($scalars[1]->name, 'eq', 'ISA');
+
+    cmp_ok($scalars[2]->name, 'eq', 'other_global_thing');
     # inherited from Bah class
-    cmp_ok($scalars[0]->original_package, 'eq', 'Bah');
-    cmp_ok($scalars[1]->name, 'eq', 'global_thing');
+    cmp_ok($scalars[2]->original_package, 'eq', 'Bah');
+    cmp_ok($scalars[3]->name, 'eq', 'global_thing');
     # inherited from Bar class
-    cmp_ok($scalars[1]->original_package, 'eq', 'Bar');
+    cmp_ok($scalars[3]->original_package, 'eq', 'Bar');
 
     my @functions = $module->functions;
 
