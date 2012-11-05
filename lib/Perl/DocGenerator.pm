@@ -104,7 +104,7 @@ sub output
     $self->{loaded_packages} = []; # clear this, save some memory
 
     while (my $package = shift @packages) {
-        print "Writing [$i/$total_packages] $package\n";
+        print "Writing [$i/$total_packages] " . $package->name() . "\n";
         $writer->write_package($package);
         Class::Unload->unload($package);
         $i++;
