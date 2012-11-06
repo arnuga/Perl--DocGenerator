@@ -4,11 +4,10 @@ use strict;
 use lib 't/lib';
 use Test::More tests => 11;
 use Perl::DocGenerator::ModuleProcessor;
-use Data::Dumper;
 
 {
     my $modproc = Perl::DocGenerator::ModuleProcessor->new('Overloader');
-    my @raw_functions = $modproc->obj->functions();
+    my @raw_functions = @{$modproc->obj->{functions}};
 
     my @all_functions = $modproc->functions();
     cmp_ok(scalar $modproc->public_functions, '==', 5);

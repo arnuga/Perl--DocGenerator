@@ -4,6 +4,7 @@ use strict;
 use lib 't/lib';
 use Test::More tests => 23;
 use Perl::DocGenerator::ModuleProcessor;
+use Data::Dumper;
 
 {
     my $module = Perl::DocGenerator::ModuleProcessor->new('Baz');
@@ -17,6 +18,7 @@ use Perl::DocGenerator::ModuleProcessor;
     my @functions = $module->functions;
     my $num_functions = scalar @functions;
 
+#    warn Data::Dumper::Dumper($module);
     cmp_ok($num_functions, '==', 2);
     cmp_ok($functions[0]->name, 'eq', 'order_drink');
     cmp_ok($functions[1]->name, 'eq', 'new');
@@ -32,22 +34,24 @@ use Perl::DocGenerator::ModuleProcessor;
     my $num_classes = scalar @classes;
 
     cmp_ok($num_classes, '==', 2);
-    cmp_ok($classes[0]->name, 'eq', 'Baz');
-    cmp_ok($classes[1]->name, 'eq', 'Bar');
+    cmp_ok($classes[0]->name, 'eq', 'Bar');
+    cmp_ok($classes[1]->name, 'eq', 'Baz');
     
     my @scalars = $module->scalars;
     my $num_scalars = scalar @scalars;
 
     cmp_ok($num_scalars, '==', 4);
     cmp_ok($scalars[0]->name, 'eq', 'BEGIN');
+
     cmp_ok($scalars[1]->name, 'eq', 'ISA');
 
-    cmp_ok($scalars[2]->name, 'eq', 'other_global_thing');
-    # inherited from Bah class
-    cmp_ok($scalars[2]->original_package, 'eq', 'Bah');
-    cmp_ok($scalars[3]->name, 'eq', 'global_thing');
     # inherited from Bar class
-    cmp_ok($scalars[3]->original_package, 'eq', 'Bar');
+    cmp_ok($scalars[2]->name, 'eq', 'global_thing');
+    cmp_ok($scalars[2]->original_package, 'eq', 'Bar');
+
+    # inherited from Bah class
+    cmp_ok($scalars[3]->name, 'eq', 'other_global_thing');
+    cmp_ok($scalars[3]->original_package, 'eq', 'Bah');
 
     my @functions = $module->functions;
 

@@ -9,9 +9,9 @@ my $module = Perl::DocGenerator::ModuleProcessor->new('Bar');
 
 isa_ok($module, 'Perl::DocGenerator::ModuleProcessor');
 
-isa_ok($module->obj, 'Devel::Symdump');
+isa_ok($module->obj, 'HASH');
 
-can_ok($module, qw/new base_classes packages scalars functions private_functions public_functions arrays hashes ios/);
+can_ok($module, qw/new base_classes scalars functions private_functions public_functions arrays hashes ios/);
 
 cmp_ok($module->package_name, 'eq', 'Bar');
 

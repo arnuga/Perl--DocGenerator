@@ -9,15 +9,19 @@ require Devel::Symdump;
 use Module::Load;
 use Perl::DocGenerator::Item;
 use Perl::DocGenerator::PodReader;
+use JSON;
+use Data::Dumper;
 
 our $VERSION = '0.01';
+
+my %modules_loaded;
 
 sub new
 {
     my ($class, $package) = @_;
     my $self = {
         original_filename => undef,
-        obj               => undef,
+        module_info       => undef,
         package_functions => undef,
         package_name      => undef,
         pod               => undef,
@@ -27,37 +31,26 @@ sub new
     {
         BEGIN { $^W = 0 }   # it's not my code, you make it compile clean
         no warnings 'all';  # no seriously, I said shutup!
-        eval {
-            load($package);
-        };
-
-        if (my $err = $@) {
-            warn "Unable to load package '$package': $err";
-            return undef;
-        }
-    }
-
-    my $original_filename = $self->_original_filename_from_inc($package);
-    if ($original_filename) {
-        $self->{original_filename} = $original_filename;
-    }
-
-    if ($package =~ /\.pm$/) { # does it have a .pm at the end? (is it a filename?)
-        my $likely_module_name = $self->_module_name_from_filename($package);
-        if ($likely_module_name) {
-            $package = $likely_module_name;
+        if (my $child_pid = open(CHILD, "-|")) {
+            # in the parent
+            waitpid($child_pid, 0);
+            my ($raw_result) = (<CHILD>);
+            close(CHILD);
+            $self->_parent_reader($raw_result);
         } else {
-            die "Unable to determine module name from file: $package.  Maybe $package is not a real package or is a mixin style module?";
+            die "Cannot fork: $!" unless defined $child_pid;
+            # in the child
+            _child_extractor($package);
         }
     }
-    $self->package_name($package);
 
-    eval { $self->obj(Devel::Symdump->new($package)); };
-    if (my $devel_symdump_err = $@) {
-        warn "Woah! Devel::Symdump cannot cleanly read your library, you must be performing some voodoo";
-        return undef;
-    }
-  
+    # init all items objects
+    $self->scalars();
+    $self->arrays();
+    $self->hashes();
+    $self->ios();
+    $self->functions();
+
     return $self;
 }
 
@@ -74,22 +67,14 @@ sub base_classes
 {
     my ($self) = @_;
     my @return_base_classes = ();
-    if ($self->_arrays > 0) {
-        my ($isa_class) = grep { $_->name =~ /ISA/ } $self->_arrays;
-        if (defined $isa_class) {
-            no strict 'refs';
-            # grab every class in ISA except myself
-            my @base_classes = grep { ! /@{[ $self->package_name() ]}/ } @{ $self->package_name() . '::ISA' };
-            foreach my $base_item (@base_classes) {
-                my $item_obj = Perl::DocGenerator::Item->new();
-                $item_obj->object_type(T_BASE_CLASS);
-                $item_obj->name($base_item);
-                $item_obj->package($base_item);
-                $item_obj->original_package($base_item);
-                $item_obj->full_name($base_item);
-                push(@return_base_classes, $item_obj);
-            }
-        }
+    foreach my $base_item (sort @{$self->obj->{base_classes}}) {
+        my $item_obj = Perl::DocGenerator::Item->new();
+        $item_obj->object_type(T_BASE_CLASS);
+        $item_obj->name($base_item);
+        $item_obj->package($base_item);
+        $item_obj->original_package($base_item);
+        $item_obj->full_name($base_item);
+        push(@return_base_classes, $item_obj);
     }
     return @return_base_classes;
 }
@@ -97,17 +82,7 @@ sub base_classes
 sub packages
 {
     my ($self) = @_;
-    my @return_packages = ();
-    foreach my $package ($self->packages) {
-        my $item_obj = Perl::DocGenerator::Item->new();
-        $item_obj->object_type(T_PACKAGE);
-        $item_obj->name($package);
-        $item_obj->package($package);
-        $item_obj->original_package($package);
-        $item_obj->full_name($package);
-        push(@return_packages, $item_obj);
-    }
-    return @return_packages;
+    return keys %modules_loaded;
 }
 
 sub scalars
@@ -116,14 +91,13 @@ sub scalars
     my @functions = $self->functions();
     # grab all the scalars that are direct members of my namespace
     my @scalars;
-    foreach my $scalar_name (sort $self->obj->scalars) {
+    foreach my $scalar_name (sort @{$self->obj->{scalars}}) {
         $scalar_name =~ s/@{[ $self->package_name() ]}::(.*)/$1/;
         push @scalars, $scalar_name;
     }
 
     my %seen;
     my @scalaronly;
-
     @seen{ map { $_->name } @functions } = ();
 
     foreach my $item (@scalars) {
@@ -140,9 +114,9 @@ sub scalars
     }
 
     foreach my $base_class ($self->base_classes) {
-        my $module = $self->_module_for_package($base_class->name);
-        if ($module) {
-            my @base_items = $module->scalars();
+        my $module_obj = $self->_module_for_package($base_class->name);
+        if ($module_obj) {
+            my @base_items = $module_obj->scalars();
             @base_items = $self->_unique_items_from_first_list(\@base_items, \@scalaronly);
             push(@scalaronly, @base_items);
         }
@@ -158,7 +132,7 @@ sub functions
         my @return_functions = ();
         # grab all the functions that are direct members of my namespace
         my @functions;
-        foreach my $function_name (sort $self->obj->functions) {
+        foreach my $function_name (@{$self->obj->{functions}}) {
             $function_name =~ s/@{[ $self->package_name() ]}::(.*)/$1/;
             push @functions, $function_name;
         }
@@ -186,9 +160,9 @@ sub functions
         # Need to investigate if we are falsely reporting a method as overridden when in fact
         # its just beem hooked into our namespace via export, export_ok or even a direct ->import() call
         foreach my $base_class ($self->base_classes) {
-            my $module = $self->_module_for_package($base_class->name);
-            if ($module) {
-                my @base_functions = $module->functions();
+            my $module_obj = $self->_module_for_package($base_class->name);
+            if ($module_obj) {
+                my @base_functions = $module_obj->functions();
 			    foreach my $base_function (@base_functions) {
 			    	foreach my $function (@return_functions) {
 			    		if ($base_function->name() eq $function->name()) {
@@ -212,9 +186,9 @@ sub obj
 {
     my ($self, $obj) = @_;
     if ($obj) {
-        $self->{obj} = $obj;
+        $self->{module_info} = $obj;
     }
-    return $self->{obj};
+    return $self->{module_info};
 }
 
 sub pod
@@ -252,9 +226,9 @@ sub arrays
     my @return_arrays = $self->_arrays;
 
     foreach my $base_class ($self->base_classes) {
-        my $module = $self->_module_for_package($base_class->name);
-        if ($module) {
-            my @base_items = $module->arrays();
+        my $module_obj = $self->_module_for_package($base_class->name);
+        if ($module_obj) {
+            my @base_items = $module_obj->arrays();
             @base_items = $self->_unique_items_from_first_list(\@base_items, [ $self->_arrays ]);
             push(@return_arrays, @base_items);
         }
@@ -269,7 +243,7 @@ sub _arrays
     my @return_arrays;
 
     my @arrays;
-    foreach my $array_name (sort $self->obj->arrays) {
+    foreach my $array_name (sort @{$self->obj->{arrays}}) {
         $array_name =~ s/@{[ $self->package_name() ]}::(.*)/$1/;
         push @arrays, $array_name;
     }
@@ -293,7 +267,7 @@ sub hashes
     my @return_hashes;
 
     my @hashes;
-    foreach my $hash_name (sort $self->obj->hashes) {
+    foreach my $hash_name (sort @{$self->obj->{hashes}}) {
         $hash_name =~ s/@{[ $self->package_name() ]}::(.*)/$1/;
         push @hashes, $hash_name;
     }
@@ -309,9 +283,9 @@ sub hashes
     }
 
         foreach my $base_class ($self->base_classes) {
-            my $module = $self->_module_for_package($base_class->name);
-            if ($module) {
-                my @base_items = $module->hashes();
+            my $module_obj = $self->_module_for_package($base_class->name);
+            if ($module_obj) {
+                my @base_items = $module_obj->hashes();
                 @base_items = $self->_unique_items_from_first_list(\@base_items, \@return_hashes);
                 push(@return_hashes, @base_items);
             }
@@ -326,7 +300,7 @@ sub ios
     my @return_ios;
 
     my @ios;
-    foreach my $io_name (sort $self->obj->ios) {
+    foreach my $io_name (sort @{$self->obj->{ios}}) {
         $io_name =~ s/@{[ $self->package_name() ]}::(.*)/$1/;
         push @ios, $io_name;
     }
@@ -342,9 +316,9 @@ sub ios
     }
 
         foreach my $base_class ($self->base_classes) {
-            my $module = $self->_module_for_package($base_class->name);
-            if ($module) {
-                my @base_items = $module->ios();
+            my $module_obj = $self->_module_for_package($base_class->name);
+            if ($module_obj) {
+                my @base_items = $module_obj->ios();
                 @base_items = $self->_unique_items_from_first_list(\@base_items, \@return_ios);
                 push(@return_ios, @base_items);
             }
@@ -356,19 +330,7 @@ sub ios
 sub _module_for_package
 {
     my ($self, $package) = @_;
-    my $module;
-    {
-        BEGIN { $^W = 0 }   # it's not my code, you make it compile clean
-        no warnings 'all';  # no seriously, I said shutup!
-        eval { $module = __PACKAGE__->new($package); };
-
-        if (my $err = $@) {
-            warn "Unable to load package '$package': $err";
-            return undef;
-        }
-    }
-
-    return $module;
+    return exists $modules_loaded{$package} ? $modules_loaded{$package} : undef;
 }
 
 sub _unique_items_from_first_list
@@ -386,18 +348,13 @@ sub _unique_items_from_first_list
 
 sub _module_name_from_filename
 {
-    my ($self, $filename) = @_;
+    my ($filename) = @_;
     if (-f $filename) {
-        open(FILE, $filename) or die "Unable to open file $filename for reading";
-        my @lines = (<FILE>);
-        close(FILE) or die "Unable to close file $filename, that's not really supposed to happen";
-        foreach my $line (@lines) {
-            chomp($line);
-            if ($line =~ /^package\s([^;]+);/i) {
-                my $package_name = $1;
-                $package_name =~ s/\s*//g;
-                return $package_name;
-            }
+        my ($module_name) = grep { /$filename/ } values %INC;
+        if ($module_name) {
+            $module_name =~ s/\//::/g;
+            $module_name =~ s/\.pm//g;
+            return $module_name;
         }
     }
     return undef;
@@ -414,7 +371,7 @@ sub original_filename
 
 sub _original_filename_from_inc
 {
-    my ($self, $package_name) = @_;
+    my ($package_name) = @_;
 
     $package_name =~ s/\:\:/\//g; # find any set of :: and convert to '/'
 
@@ -515,6 +472,76 @@ sub _is_function_an_operator_overload
     return 1 if ($function_name eq '=');
 
     return undef;
+}
+
+sub _child_extractor
+{
+    my ($package) = @_;
+
+    my ($filename, $module_name, $devel_symbol);
+    #use the package name as a hash key to untaint it
+    my %worthless_hash;
+    $worthless_hash{$package} = 1;
+    ($package) = keys %worthless_hash;
+    load($package);
+    
+    if (my $err = $@) {
+        warn "Unable to load package '$package': $err";
+        exit;
+    }
+    
+    $filename = _original_filename_from_inc($package);
+    
+    if ($package =~ /\.pm$/) { # does it have a .pm at the end? (is it a filename?)
+        my $likely_module_name = _module_name_from_filename($package);
+        if ($likely_module_name) {
+            $module_name = $likely_module_name;
+        } else {
+            die "Unable to determine module name from file: $package.  Maybe $package is not a real package or is a mixin style module?";
+        }
+    } else {
+        $module_name = $package;
+    }
+    
+    eval { $devel_symbol = Devel::Symdump->new($module_name); };
+
+    if (my $eval_err = $@) {
+        print "Unable to load package $module_name with Devel::Symdump!: $eval_err";
+        exit; 
+    }
+
+
+    no strict 'refs';
+    my $module_info = {
+        scalars      => [ $devel_symbol->scalars()                               ],
+        arrays       => [ $devel_symbol->arrays()                                ],
+        hashes       => [ $devel_symbol->hashes()                                ],
+        ios          => [ $devel_symbol->ios()                                   ],
+        functions    => [ $devel_symbol->functions()                             ],
+        base_classes => [ grep { ! /$module_name/ } @ { $module_name . '::ISA' } ],
+#        inc_libs     => [ %INC                                                   ],
+    };
+
+    print STDOUT join('|', $filename, $module_name, encode_json($module_info));
+    exit;
+}
+
+sub _parent_reader
+{
+    my ($self, $raw_result) = @_;
+    my ($filename, $module_name, $json_response) = split(/\|/, $raw_result);
+    $self->{original_filename} = $filename;
+    $self->{package_name} = $module_name;
+    my $module_info = decode_json($json_response);
+    $self->obj($module_info);
+
+    # put this on the master stack
+    $modules_loaded{$module_name} = $self;
+
+    # load all base classes since we'll need them later for inheritance details
+    foreach my $base_class (@{$module_info->{base_classes}}) {
+        ref($self)->new($base_class);
+    }
 }
 
 1;
