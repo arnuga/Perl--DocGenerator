@@ -59,7 +59,7 @@ sub write_package
     $self->writer_obj()->write_scalars($package_obj);
     $self->writer_obj()->write_arrays($package_obj);
     $self->writer_obj()->write_hashes($package_obj);
-    $self->writer_obj()->write_ios($package_obj);
+    $self->writer_obj()->write_io_handles($package_obj);
     $self->writer_obj()->write_public_functions($package_obj);
     $self->writer_obj()->write_private_functions($package_obj);
     $self->writer_obj()->write_imbedded_pod($package_obj);
@@ -93,7 +93,7 @@ sub _load_and_verify_writer
                                             write_scalars
                                             write_arrays
                                             write_hashes
-                                            write_ios
+                                            write_io_handles
                                             write_public_functions
                                             write_private_functions
                                             write_imbedded_pod/) {

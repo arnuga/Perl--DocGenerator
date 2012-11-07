@@ -50,12 +50,12 @@ sub write_hashes
     }
 }
 
-sub write_ios
+sub write_io_handles
 {
     my ($self, $package) = @_;
-    if ($package->ios > 0) {
-        print "\tIO's:\n";
-        map { print "\t\t@{[ $_->name ]}\n" } $package->ios;
+    if ($package->io_handles > 0) {
+        print "\tIO Handles:\n";
+        map { print "\t\t@{[ $_->name ]}\n" } $package->io_handles;
     }
 }
 
@@ -161,7 +161,7 @@ May include numerous subsections (i.e., =head2, =head3, etc.).
 
 =head2 write_hashes
 
-=head2 write_ios
+=head2 write_io_handles
 
 =head2 write_public_functions
 

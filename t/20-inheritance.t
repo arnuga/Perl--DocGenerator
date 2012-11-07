@@ -1,41 +1,45 @@
-#!perl -T
+#!perl 
 
 use strict;
 use lib 't/lib';
-use Test::More tests => 23;
+use Test::More tests => 28;
 use Perl::DocGenerator::ModuleProcessor;
 use Data::Dumper;
 
 {
-    my $module = Perl::DocGenerator::ModuleProcessor->new('Baz');
-    
-    my @classes = $module->base_classes;
-    my $num_classes = scalar @classes;
+    my $processor = Perl::DocGenerator::ModuleProcessor->new('Baz');
 
-    cmp_ok($num_classes, '==', 1);
-    cmp_ok($classes[0]->name, 'eq', 'Bar');
+    cmp_ok(scalar $processor->modules(), '==', 2);
+    my $module = $processor->module('Baz');
+    ok($module);
+    isa_ok($module, 'Perl::DocGenerator::ModuleInfo');
+    my @base_classes = $module->base_classes();
+    cmp_ok(scalar @base_classes, '==', 1);
+    cmp_ok($base_classes[0]->name, 'eq', 'Bar');
     
     my @functions = $module->functions;
     my $num_functions = scalar @functions;
 
-#    warn Data::Dumper::Dumper($module);
     cmp_ok($num_functions, '==', 2);
     cmp_ok($functions[0]->name, 'eq', 'order_drink');
     cmp_ok($functions[1]->name, 'eq', 'new');
 
     # this function is inherited from Bar class
+    cmp_ok($functions[1]->package, 'eq', 'Baz');
     cmp_ok($functions[1]->original_package, 'eq', 'Bar');
 }
 
 {
-    my $module = Perl::DocGenerator::ModuleProcessor->new('Bah');
+    my $processor = Perl::DocGenerator::ModuleProcessor->new('Bah');
 
+    cmp_ok(scalar $processor->modules(), '==', 3);
+    my $module = $processor->module('Bah');
     my @classes = $module->base_classes;
     my $num_classes = scalar @classes;
 
     cmp_ok($num_classes, '==', 2);
-    cmp_ok($classes[0]->name, 'eq', 'Bar');
-    cmp_ok($classes[1]->name, 'eq', 'Baz');
+    cmp_ok($classes[0]->name, 'eq', 'Baz');
+    cmp_ok($classes[1]->name, 'eq', 'Bar');
     
     my @scalars = $module->scalars;
     my $num_scalars = scalar @scalars;

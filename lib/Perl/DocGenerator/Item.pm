@@ -9,7 +9,7 @@ use enum qw/
 require Exporter;
 use vars qw/@ISA @EXPORT/;
 @ISA = qw/Exporter/;
-@EXPORT = qw/T_SCALAR T_ARRAY T_HASH T_FUNCTION T_IOS T_PACKAGE T_BASE_CLASS/;
+@EXPORT = qw/T_SCALAR T_ARRAY T_HASH T_FUNCTION T_IOHANDLE T_PACKAGE T_BASE_CLASS/;
 
 sub new
 {

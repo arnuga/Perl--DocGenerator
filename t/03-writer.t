@@ -2,17 +2,20 @@
 
 use strict;
 use lib 't/lib';
-use Test::More tests => 6;
-use Perl::DocGenerator::Writer;
-use Perl::DocGenerator::Writer::XML;
-use Perl::DocGenerator::Writer::HTML;
-use Perl::DocGenerator::Writer::Screen;
-use Perl::DocGenerator::Writer::Pod;
-use Perl::DocGenerator::Writer::PDF;
+use Test::More tests => 13;
+
+BEGIN {
+    use_ok('Perl::DocGenerator::Writer');
+    use_ok('Perl::DocGenerator::Writer::XML');
+    use_ok('Perl::DocGenerator::Writer::HTML');
+    use_ok('Perl::DocGenerator::Writer::Screen');
+    use_ok('Perl::DocGenerator::Writer::Pod');
+    use_ok('Perl::DocGenerator::Writer::PDF');
+};
 
 {
-    my $writer = Perl::DocGenerator::Writer->new();
-    ok($writer);
+    my $writer = new_ok('Perl::DocGenerator::Writer');
+    isa_ok($writer, 'Perl::DocGenerator::Writer');
     $writer->writer_class('Perl::DocGenerator::Writer::XML'); 
     ok($writer->initialize_writer());
 

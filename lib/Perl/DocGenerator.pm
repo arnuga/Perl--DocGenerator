@@ -66,14 +66,16 @@ sub scan_packages
     my @locations = grep { defined $_ } ($self->folders(), $self->packages(), @packages);
     $self->_find_perl_modules_at_locations(@locations); 
 
-    {
-        BEGIN { $^W = 0 }   # it's not my code, you make it compile clean
-        no warnings 'all';  # no seriously, I said shutup!
+#    {
+#        BEGIN { $^W = 0 }   # it's not my code, you make it compile clean
+#        no warnings 'all';  # no seriously, I said shutup!
 
-        print "Processing packages...";
+        print "Processing packages...\n";
+        my $total_packages = scalar $self->packages();
+        my $i = 1;
         foreach my $location ($self->packages()) {
             if ($location) {
-                print "Processing $location\n";
+                print "[$i/$total_packages] $location\n";
                 my $mod_proc;
                 eval { $mod_proc = Perl::DocGenerator::ModuleProcessor->new($location, $self->recursive()); };
                 if ($mod_proc) {
@@ -82,8 +84,9 @@ sub scan_packages
                     $self->loaded_packages(@loaded_packages);
                 }
             }
+            $i++;
         }
-    }
+#    }
     print "done\n";
 }
 

@@ -226,13 +226,13 @@ sub write_hashes
     }
 }
 
-sub write_ios
+sub write_io_handles
 {
     my ($self, $package) = @_;
-    if ($package->ios > 0) {
-        $self->page_template->param(HAS_IOS => 1);
+    if ($package->io_handles > 0) {
+        $self->page_template->param(HAS_IO_HANDLES => 1);
         $self->page_template->param(
-            IOS => [ map { { IO => $_->name() } } $package->ios ]
+            IO_HANDLES => [ map { { IO_HANDLE => $_->name() } } $package->io_handles ]
         );
     }
 }
@@ -413,7 +413,7 @@ May include numerous subsections (i.e., =head2, =head3, etc.).
 
 =head2 write_hashes
 
-=head2 write_ios
+=head2 write_io_handles
 
 =head2 write_public_functions
 
@@ -487,7 +487,7 @@ BOOL:
     has_scalars
     has_arrays
     has_hashes
-    has_ios
+    has_io_handles
     has_public_functions
     has_private_functions
 
@@ -496,7 +496,7 @@ LOOP:
     scalars
     arrays
     hashes
-    ios
+    io_handles
     public_functions
     private_functions
 
