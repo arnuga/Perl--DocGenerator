@@ -54,6 +54,16 @@ sub update_links_to_base_class_data
 
     # remove anonymous function refs from the scalar list (and resort it)
     $self->{scalars} = [ sort { $a->name cmp $b->name } _unique_items_from_first_list($self->{scalars}, $self->{functions}) ];
+
+    # update original_package_name for functions that exist in one or more of our base classes
+    foreach my $base_function ($base_class_obj->functions) {
+        foreach my $function ($self->functions) {
+            if ($base_function->name eq $function->name) {
+                $function->original_package($base_function->package);
+                $function->is_overridden('Y');
+            }
+        }
+    }
 }
 
 sub pod
@@ -71,18 +81,15 @@ sub private_functions
 {
     my ($self) = @_;
     # private functions are those that start with an underscore '_'
-    my @private_funcs = grep { $_->name =~ /^_/ } $self->functions;
-
-    return @private_funcs;
+    return grep { $_->name =~ /^_/ } $self->functions;
 }
 
 sub public_functions
 {
     my ($self) = @_;
     # public functions are those that DO NOT start with an underscore '_'
-    my @public_funcs = grep { $_->name =~ /^[^_]/ } $self->functions;
-
-    return @public_funcs;
+    #warn Data::Dumper::Dumper($self->functions);
+    return grep { $_->name =~ /^[^_]/ } $self->functions;
 }
 
 # private methods
@@ -103,14 +110,14 @@ sub _item_class_wrap
     my $is_operator_overload = undef;
     if ($item_type == T_FUNCTION) {
         if (_is_function_an_operator_overload($raw_item)) {
-            $is_operator_overload = 1;
+            $is_operator_overload = 'Y';
 
             # if this is an overridden operator then for some reason
             # I don't understand it's symbol table entry contains a prepended '('
             # in the case of an overridden () function then great, but for everything
             # else we really don't want it so we strip it
-            if ($raw_item =~ /^\(/ && $raw_item ne '()') {
-                $raw_item = s/^\(//;
+            if (($raw_item =~ /^\(/) && ($raw_item ne '()')) {
+                $raw_item =~ s/^\(//;
             }
         }
     }
@@ -276,23 +283,11 @@ May include numerous subsections (i.e., =head2, =head3, etc.).
 
 =head2 new
 
-=head2 module_info
+=head2 module_name
 
-=head2 pod
-
-=head2 package_name
-
-=head2 base_classes
-
-=head2 packages
+=head2 filename
 
 =head2 scalars
-
-=head2 functions
-
-=head2 private_functions
-
-=head2 public_functions
 
 =head2 arrays
 
@@ -300,9 +295,17 @@ May include numerous subsections (i.e., =head2, =head3, etc.).
 
 =head2 io_handles
 
-=head2 set
+=head2 functions
 
-=head2 filename
+=head2 base_classes
+
+=head2 update_links_to_base_class_data
+
+=head2 pod
+
+=head2 private_functions
+
+=head2 public_functions
 
 =head1 DIAGNOSTICS
 

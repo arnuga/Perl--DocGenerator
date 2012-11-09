@@ -55,7 +55,6 @@ sub package_string
 
 sub modules
 {
-    my ($self) = @_;
     return values %modules_loaded;
 }
 
@@ -81,10 +80,14 @@ sub _parent_reader
 
         # load all base classes since we'll need them later for inheritance details
         # we load base classes in the order in which they appeared in the file
+        my $total_base_classes = scalar $module_info_obj->base_classes();
+        my $i = 1;
         foreach my $base_class ($module_info_obj->base_classes()) {
+            print "\t[$i/$total_base_classes] " . $base_class->name . "\n";
             __PACKAGE__->new($base_class->name);
             my $base_class_obj = $self->module($base_class->name);
             $module_info_obj->update_links_to_base_class_data($base_class_obj);
+            $i++;
         }
     } else {
         warn "Error reading json response: $raw_module_info\n";
@@ -212,7 +215,7 @@ May include numerous subsections (i.e., =head2, =head3, etc.).
 
 =head2 new
 
-=head2 package_name
+=head2 package_string
 
 =head2 modules
 

@@ -154,7 +154,7 @@ sub after_package
 
     if ($self->page_template) {
         my $page_output = $self->page_template->output();
-        my $filename = $self->_filename_from_package_name($package->package_name);
+        my $filename = $package->filename . '.html';
         open(FILE, ">$filename") or die "Unable to create file $filename: $!\n";
         print FILE $page_output;
         close(FILE) or die "Unable to close file $filename: $!\n";
@@ -176,7 +176,7 @@ sub before_finish
 sub write_package_description
 {
     my ($self, $package) = @_;
-    $self->page_template->param(PACKAGE_NAME => $package->package_name);
+    $self->page_template->param(PACKAGE_NAME => $package->module_name);
     my @base_classes = $package->base_classes();
     $self->page_template->param(HAS_BASE_CLASSES => scalar @base_classes);
     if (@base_classes) {
@@ -185,7 +185,7 @@ sub write_package_description
                 map {
                     {
                         BASE_CLASS_NAME => $_->name(),
-                        BASE_CLASS_HREF => $self->_filename_from_package_name($_->name()),
+                        BASE_CLASS_HREF => $_->filename() . '.html',
                     }
                 } @base_classes
             ]
@@ -306,8 +306,8 @@ sub write_index
         $self->index_template->param(
             PACKAGES => [ map {
                 {
-                    PACKAGE_NAME => $_->package_name,
-                    PACKAGE_HREF => $self->_filename_from_package_name($_->package_name)
+                    PACKAGE_NAME => $_->module_name,
+                    PACKAGE_HREF => $_->filename . '.html',
                 }
             } @packages ]
         );

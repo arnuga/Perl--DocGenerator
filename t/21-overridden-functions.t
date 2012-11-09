@@ -4,10 +4,12 @@ use strict;
 use lib 't/lib';
 use Test::More tests => 7;
 use Perl::DocGenerator::ModuleProcessor;
+use Data::Dumper;
 
 {
-    my $module = Perl::DocGenerator::ModuleProcessor->new('Child');
-    
+    my $processor = Perl::DocGenerator::ModuleProcessor->new('Child');
+   
+    my $module = $processor->module('Child'); 
     my @classes = $module->base_classes;
     my $num_classes = scalar @classes;
 

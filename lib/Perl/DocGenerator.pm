@@ -77,16 +77,12 @@ sub scan_packages
             if ($location) {
                 print "[$i/$total_packages] $location\n";
                 my $mod_proc;
-                eval { $mod_proc = Perl::DocGenerator::ModuleProcessor->new($location, $self->recursive()); };
-                if ($mod_proc) {
-                    my @loaded_packages = $self->loaded_packages();
-                    push(@loaded_packages, $mod_proc);
-                    $self->loaded_packages(@loaded_packages);
-                }
+                eval { Perl::DocGenerator::ModuleProcessor->new($location, $self->recursive()); };
             }
             $i++;
         }
 #    }
+    $self->loaded_packages(Perl::DocGenerator::ModuleProcessor->modules);
     print "done\n";
 }
 
@@ -102,12 +98,8 @@ sub output
     print "Writing packages...";
     my $total_packages = scalar $self->loaded_packages() - 1;
     my $i = 0;
-
-    my @packages = @{$self->{loaded_packages}};
-    $self->{loaded_packages} = []; # clear this, save some memory
-
-    while (my $package = shift @packages) {
-        print "Writing [$i/$total_packages] " . $package->name() . "\n";
+    foreach my $package ($self->loaded_packages) {
+        print "Writing [$i/$total_packages] " . $package->module_name() . "\n";
         $writer->write_package($package);
         Class::Unload->unload($package);
         $i++;

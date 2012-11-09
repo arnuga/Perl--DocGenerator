@@ -15,7 +15,8 @@ use Perl::DocGenerator::ModuleProcessor;
         cmp_ok(scalar keys %methods, '==', 3);
     }
 
-    my $module = Perl::DocGenerator::ModuleProcessor->new('ClassWithPod');
+    my $processor = Perl::DocGenerator::ModuleProcessor->new('ClassWithPod');
+    my $module = $processor->module('ClassWithPod');
     my $pod_obj = $module->pod();
     my %podded_methods = $pod_obj->methods();
     cmp_ok(scalar keys %podded_methods, '==', 3);

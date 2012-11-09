@@ -3,7 +3,7 @@ package Perl::DocGenerator::Item;
 use strict;
 
 use enum qw/
-    :T_=0 SCALAR ARRAY HASH FUNCTION IOS PACKAGE BASE_CLASS
+    :T_=0 SCALAR ARRAY HASH FUNCTION IOHANDLE PACKAGE BASE_CLASS
 /;
 
 require Exporter;
